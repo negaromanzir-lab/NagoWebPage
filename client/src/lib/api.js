@@ -148,6 +148,9 @@ export const projectsApi = {
     Object.fromEntries(Object.entries(params).filter(([, v]) => v !== '' && v !== undefined && v !== null))
   )}`),
 
+  /** Get all project categories */
+  getCategories: () => api.get('/api/projects/categories'),
+
   /** Get all distinct filter options (categories, vendors, price range) */
   getFilterMeta: () => api.get('/api/projects/filter-meta'),
 
