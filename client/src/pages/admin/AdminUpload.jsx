@@ -68,10 +68,11 @@ const COLOR = {
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function fmtBytes(b) {
-  if (!b) return '0 B';
-  const k = 1024, s = ['B','KB','MB','GB'];
-  const i = Math.floor(Math.log(b) / Math.log(k));
-  return `${(b / Math.pow(k, i)).toFixed(1)} ${s[i]}`;
+  const n = parseFloat(b);
+  if (!n || n <= 0 || isNaN(n)) return '0 B';
+  const k = 1024, s = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.min(Math.floor(Math.log(n) / Math.log(k)), s.length - 1);
+  return `${(n / Math.pow(k, i)).toFixed(1)} ${s[i]}`;
 }
 
 function fmtDate(d) {
@@ -298,7 +299,13 @@ function StorageStats() {
 
   if (!stats) return null;
 
-  const { totals, byType, recent } = stats;
+  const { byType = [], recent = [] } = stats;
+  const totals = {
+    total_files:         parseInt(stats.totals?.total_files         ?? 0, 10),
+    total_bytes:         parseFloat(stats.totals?.total_bytes       ?? 0),
+    total_downloads:     parseInt(stats.totals?.total_downloads     ?? 0, 10),
+    projects_with_files: parseInt(stats.totals?.projects_with_files ?? 0, 10),
+  };
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-5">
@@ -307,13 +314,13 @@ function StorageStats() {
       {/* Totals */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: 'Total Files',    value: totals.total_files },
-          { label: 'Total Size',     value: fmtBytes(totals.total_bytes) },
-          { label: 'Downloads',      value: totals.total_downloads },
+          { label: 'Total Files',       value: totals.total_files },
+          { label: 'Total Size',        value: fmtBytes(totals.total_bytes) },
+          { label: 'Downloads',         value: totals.total_downloads },
           { label: 'Projects w/ Files', value: totals.projects_with_files },
         ].map(({ label, value }) => (
           <div key={label} className="bg-gray-800 rounded-xl p-3 text-center">
-            <p className="text-white font-bold text-lg">{value}</p>
+            <p className="text-white font-bold text-lg">{value ?? 0}</p>
             <p className="text-gray-500 text-xs mt-0.5">{label}</p>
           </div>
         ))}
@@ -326,8 +333,9 @@ function StorageStats() {
           <div className="space-y-2">
             {byType.map((t) => {
               const c = fileTypeColor(t.file_type);
+              const typeBytes = parseFloat(t.total_bytes ?? 0);
               const pct = totals.total_bytes > 0
-                ? Math.round((t.total_bytes / totals.total_bytes) * 100)
+                ? Math.round((typeBytes / totals.total_bytes) * 100)
                 : 0;
               return (
                 <div key={t.file_type} className="flex items-center gap-3">
@@ -336,8 +344,8 @@ function StorageStats() {
                     <div className={`h-full rounded-full ${c.text.replace('text-', 'bg-')}`}
                       style={{ width: `${pct}%` }} />
                   </div>
-                  <span className="text-gray-400 text-xs w-16 text-right">{fmtBytes(t.total_bytes)}</span>
-                  <span className="text-gray-600 text-xs w-12 text-right">{t.file_count} files</span>
+                  <span className="text-gray-400 text-xs w-16 text-right">{fmtBytes(typeBytes)}</span>
+                  <span className="text-gray-600 text-xs w-12 text-right">{t.file_count ?? 0} files</span>
                 </div>
               );
             })}
