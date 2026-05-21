@@ -9,6 +9,7 @@ import LoginPage          from './pages/LoginPage';
 import RegisterPage       from './pages/RegisterPage';
 import ManualPaymentPage  from './pages/ManualPaymentPage';
 import ProjectsPage       from './pages/ProjectsPage';
+import ProjectDetailsPage from './pages/ProjectDetailsPage';
 
 // ── User dashboard ─────────────────────────────────────────────────────────────
 import {
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/pay"      element={<ManualPaymentPage />} />
           <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/projects/:id" element={<ProjectDetailsPage />} />
 
           {/* ── User dashboard (nested) ──────────────────────────────────────── */}
           <Route
