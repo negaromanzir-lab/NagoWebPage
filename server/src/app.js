@@ -13,6 +13,7 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 // ── Route imports ──────────────────────────────────────────────────────────────
 const authRoutes = require('./routes/auth.routes');
 const projectsRoutes = require('./routes/projects.routes');
+const coursesRoutes = require('./routes/courses.routes');
 const paymentsRoutes = require('./routes/payments.routes');
 const downloadsRoutes = require('./routes/downloads.routes');
 const usersRoutes = require('./routes/users.routes');
@@ -72,6 +73,10 @@ const UPLOAD_BASE = path.resolve(process.env.UPLOAD_DIR || 'uploads');
 app.use('/uploads/avatars',
   express.static(path.join(UPLOAD_BASE, 'avatars')));
 
+// Course images — public
+app.use('/uploads/courses',
+  express.static(path.join(UPLOAD_BASE, 'courses')));
+
 // Project preview thumbnails — public
 app.use('/uploads/projects/previews',
   express.static(path.join(UPLOAD_BASE, 'projects', 'previews')));
@@ -101,6 +106,7 @@ app.get('/health', (_req, res) => {
 // ── API routes ─────────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectsRoutes);
+app.use('/api/courses', coursesRoutes);
 app.use('/api/payments', paymentsRoutes);
 app.use('/api/downloads', downloadsRoutes);
 app.use('/api/users', usersRoutes);

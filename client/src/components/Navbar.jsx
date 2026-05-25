@@ -132,6 +132,12 @@ export default function Navbar() {
             >
               Projects
             </Link>
+            <Link
+              to="/courses"
+              className="text-gray-400 hover:text-cyan-400 text-sm font-medium transition-colors duration-200"
+            >
+              Courses
+            </Link>
             {['Categories', 'Pricing'].map((item) => (
               <a
                 key={item}
@@ -188,10 +194,10 @@ export default function Navbar() {
       {/* Mobile menu */}
       {menuOpen && (
         <div className="md:hidden bg-gray-900 border-t border-gray-800 px-4 py-4 space-y-3">
-          {['Projects', 'Categories', 'Pricing', 'About'].map((item) => (
+          {['Projects', 'Courses', 'Categories', 'Pricing', 'About'].map((item) => (
             <a
               key={item}
-              href={`/#${item.toLowerCase()}`}
+              href={item === 'Projects' ? '/projects' : item === 'Courses' ? '/courses' : `/#${item.toLowerCase()}`}
               className="block text-gray-300 hover:text-cyan-400 text-sm font-medium py-1 transition-colors"
               onClick={() => setMenuOpen(false)}
             >
