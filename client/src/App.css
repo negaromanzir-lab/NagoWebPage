@@ -2,14 +2,18 @@
 
 /* Hide scrollbar (cross-browser compatible) */
 .scrollbar-hide {
-  /* Chrome, Safari, Edge (Chromium-based) */
-  -webkit-scrollbar-width: none;
-  
-  /* Firefox 64+ */
-  scrollbar-width: none;
-  
   /* IE and Edge (older) */
   -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+@supports selector(::-webkit-scrollbar) {
+  .scrollbar-hide {
+    scrollbar-width: none;
+  }
 }
 
 .scrollbar-hide::-webkit-scrollbar {
