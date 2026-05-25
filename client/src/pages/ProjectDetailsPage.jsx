@@ -32,6 +32,7 @@ export default function ProjectDetailsPage() {
   const [error, setError] = useState(null);
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [isInWishlistLoading, setIsInWishlistLoading] = useState(false);
+  const [purchaseLoading, setPurchaseLoading] = useState(false);
 
   useEffect(() => {
     async function loadProject() {
@@ -74,6 +75,33 @@ export default function ProjectDetailsPage() {
       console.error('Wishlist error:', err);
     } finally {
       setIsInWishlistLoading(false);
+    }
+  };
+
+  const handlePurchase = async () => {
+    if (!project) return;
+
+    const isFree = parseFloat(project.price) === 0;
+
+    if (isFree) {
+      // For free projects, request download token
+      setPurchaseLoading(true);
+      try {
+        const res = await downloadApi.requestToken(project.id);
+        const token = res.data?.token;
+        if (token) {
+          window.location.href = downloadApi.fileUrl(token);
+        } else {
+          alert('Failed to download. Please try again.');
+        }
+      } catch (err) {
+        alert(err.message || 'Download failed');
+      } finally {
+        setPurchaseLoading(false);
+      }
+    } else {
+      // For paid projects, redirect to manual payment or checkout
+      navigate('/pay', { state: { projectId: project.id, projectTitle: project.title, price: project.price } });
     }
   };
 
@@ -132,24 +160,25 @@ export default function ProjectDetailsPage() {
           {/* Main content */}
           <div className="lg:col-span-2">
             {/* Preview image / topology placeholder */}
-            <div className="relative h-96 bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden mb-8">
+            <div className="relative w-full h-96 bg-gradient-to-br from-gray-900 to-gray-950 border border-gray-800 rounded-2xl overflow-hidden mb-8 flex items-center justify-center">
               {previewUrl ? (
                 <img
                   src={previewUrl}
                   alt={project.title}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextElementSibling?.style.display = 'flex';
+                  }}
                 />
-              ) : (
-                <>
-                  <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.05)_1px,transparent_1px)] bg-[size:24px_24px]" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-8xl opacity-20">{TOPOLOGY_ICONS[project.topology_type] || '🌐'}</span>
-                  </div>
-                </>
-              )}
+              ) : null}
+
+              <div className={`absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.05)_1px,transparent_1px)] bg-[size:24px_24px] flex items-center justify-center ${previewUrl ? 'hidden' : ''}`}>
+                <span className="text-9xl opacity-30">{TOPOLOGY_ICONS[project.topology_type] || '🌐'}</span>
+              </div>
 
               {/* Badges */}
-              <div className="absolute top-4 left-4 flex gap-2">
+              <div className="absolute top-4 left-4 flex gap-2 z-10">
                 {project.is_featured && (
                   <span className="bg-cyan-500 text-gray-950 text-xs font-bold px-3 py-1.5 rounded-full">Featured</span>
                 )}
@@ -160,7 +189,7 @@ export default function ProjectDetailsPage() {
 
               {/* Difficulty badge */}
               {project.difficulty && (
-                <div className="absolute top-4 right-4">
+                <div className="absolute top-4 right-4 z-10">
                   <span className={`text-xs font-semibold px-3 py-1.5 rounded-full capitalize ${DIFFICULTY_COLORS[project.difficulty] || ''}`}>
                     {project.difficulty}
                   </span>
@@ -275,12 +304,34 @@ export default function ProjectDetailsPage() {
               {/* CTA Buttons */}
               <div className="space-y-3">
                 {isFree ? (
-                  <button className="w-full bg-cyan-500 hover:bg-cyan-400 text-gray-950 font-semibold py-3 rounded-xl transition-colors">
-                    Download Now
+                  <button
+                    onClick={handlePurchase}
+                    disabled={purchaseLoading}
+                    className="w-full bg-cyan-500 hover:bg-cyan-400 disabled:opacity-60 text-gray-950 font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+                  >
+                    {purchaseLoading ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-gray-950/40 border-t-gray-950 rounded-full animate-spin" />
+                        Downloading…
+                      </>
+                    ) : (
+                      'Download Now'
+                    )}
                   </button>
                 ) : (
-                  <button className="w-full bg-cyan-500 hover:bg-cyan-400 text-gray-950 font-semibold py-3 rounded-xl transition-colors">
-                    Purchase Now
+                  <button
+                    onClick={handlePurchase}
+                    disabled={purchaseLoading}
+                    className="w-full bg-cyan-500 hover:bg-cyan-400 disabled:opacity-60 text-gray-950 font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+                  >
+                    {purchaseLoading ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-gray-950/40 border-t-gray-950 rounded-full animate-spin" />
+                        Processing…
+                      </>
+                    ) : (
+                      'Purchase Now'
+                    )}
                   </button>
                 )}
 
