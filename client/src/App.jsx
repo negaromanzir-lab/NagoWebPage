@@ -17,6 +17,7 @@ import UniversityExitExamPage from './pages/UniversityExitExamPage';
 import HighSchoolEntranceExamPage from './pages/HighSchoolEntranceExamPage';
 import StreamSubjectsPage from './pages/StreamSubjectsPage';
 import SubjectYearsPage from './pages/SubjectYearsPage';
+import ExamContentPage from './pages/ExamContentPage';
 
 // ── User dashboard ─────────────────────────────────────────────────────────────
 import {
@@ -59,6 +60,7 @@ export default function App() {
           <Route path="/exam-preparation/highschool-entrance" element={<HighSchoolEntranceExamPage />} />
           <Route path="/exam-preparation/highschool-entrance/:stream" element={<StreamSubjectsPage />} />
           <Route path="/exam-preparation/highschool-entrance/:stream/:subject" element={<SubjectYearsPage />} />
+          <Route path="/exam-preparation/highschool-entrance/:stream/:subject/:year" element={<ExamContentPage />} />
 
           {/* ── User dashboard (nested) ──────────────────────────────────────── */}
           <Route

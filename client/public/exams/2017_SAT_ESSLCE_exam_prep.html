@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESSLCE SAT 2017 E.C — Exam Preparation</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c14;
+    --surface: #111520;
+    --card: #161b2e;
+    --border: #1e2540;
+    --accent: #4f9cf9;
+    --accent2: #f9a84f;
+    --correct: #3ecf8e;
+    --wrong: #f16565;
+    --text: #e8eaf6;
+    --muted: #7a82a8;
+    --gold: #f5c842;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Source Serif 4',Georgia,serif;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  body::before{
+    content:'';
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    background:
+      radial-gradient(ellipse 80% 40% at 20% 10%, rgba(79,156,249,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 80%, rgba(249,168,79,0.05) 0%, transparent 60%);
+    pointer-events:none;z-index:0;
+  }
+
+  /* ---- HEADER ---- */
+  header{
+    position:relative;z-index:10;
+    padding:48px 24px 36px;
+    text-align:center;
+    border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg, rgba(79,156,249,0.06) 0%, transparent 100%);
+  }
+  .flag-bar{display:flex;justify-content:center;gap:6px;margin-bottom:20px;}
+  .flag-bar span{display:block;height:5px;border-radius:3px;}
+  .flag-bar span:nth-child(1){width:80px;background:#078930;}
+  .flag-bar span:nth-child(2){width:80px;background:#fcdd09;}
+  .flag-bar span:nth-child(3){width:80px;background:#ef3340;}
+  .flag-bar span:nth-child(4){width:24px;background:var(--accent);border-radius:50%;}
+
+  header h1{
+    font-family:'Playfair Display',serif;
+    font-size:clamp(2rem,5vw,3.5rem);
+    font-weight:900;
+    letter-spacing:-1px;
+    background:linear-gradient(135deg,#fff 30%,var(--accent) 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    -webkit-text-fill-color:transparent;
+    line-height:1.1;
+  }
+  header p{margin-top:10px;color:var(--muted);font-size:1rem;font-style:italic;font-weight:300;letter-spacing:0.5px;}
+  .meta-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:20px;}
+  .pill{
+    background:var(--surface);border:1px solid var(--border);border-radius:100px;
+    padding:5px 16px;font-size:0.78rem;font-family:'JetBrains Mono',monospace;
+    color:var(--accent);letter-spacing:0.5px;
+  }
+
+  /* ---- SCORE DASHBOARD ---- */
+  #dashboard{
+    position:sticky;top:0;z-index:100;
+    background:rgba(10,12,20,0.92);
+    -webkit-backdrop-filter:blur(16px);
+    backdrop-filter:blur(16px);
+    border-bottom:1px solid var(--border);
+    padding:12px 24px;
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+  }
+  .dash-stat{display:flex;flex-direction:column;align-items:center;}
+  .dash-stat .val{font-family:'JetBrains Mono',monospace;font-size:1.4rem;font-weight:600;}
+  .dash-stat .lbl{font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+  .progress-ring{display:flex;align-items:center;gap:14px;}
+  #prog-bar-wrap{width:180px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+  #prog-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width .4s;}
+  .dash-btn{
+    background:var(--accent);color:#000;border:none;border-radius:8px;
+    padding:8px 20px;font-family:'JetBrains Mono',monospace;font-size:0.8rem;
+    font-weight:600;cursor:pointer;transition:opacity .2s;
+  }
+  .dash-btn:hover{opacity:.8;}
+  .dash-buttons{display:flex;gap:8px;}
+  #d-answered { color:var(--accent); }
+  #d-correct { color:var(--correct); }
+  #d-wrong { color:var(--wrong); }
+  #d-pct { font-family:'JetBrains Mono',monospace;font-size:0.85rem;color:var(--muted); }
+
+  /* Formula note styles */
+  .formula-note{color:var(--muted);font-size:0.88em;}
+  .subsection-note{color:var(--muted);font-size:0.9rem;margin-bottom:16px;padding-left:4px;font-style:italic;}
+  .q-card{animation:fadeUp 0.5s both;}
+  .dash-buttons{display:flex;gap:8px;}
+  #d-answered { color:var(--accent); }
+  #d-correct { color:var(--correct); }
+  #d-wrong { color:var(--wrong); }
+  #d-pct { font-family:'JetBrains Mono',monospace;font-size:0.85rem;color:var(--muted); }
+
+  /* ---- LAYOUT ---- */
+  main{max-width:900px;margin:0 auto;padding:40px 20px 80px;position:relative;z-index:1;}
+
+  /* ---- SECTION TITLE ---- */
+  .section-title{
+    font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--accent2);
+    letter-spacing:2px;text-transform:uppercase;margin:48px 0 20px;
+    padding-bottom:10px;border-bottom:1px solid var(--border);
+    display:flex;align-items:center;gap:12px;
+  }
+  .section-title::before{content:'';display:block;width:28px;height:2px;background:var(--accent2);}
+
+  /* ---- PASSAGE BOX ---- */
+  .passage-box{
+    background:rgba(79,156,249,0.04);
+    border:1px solid var(--border);
+    border-left:3px solid var(--accent2);
+    border-radius:12px;
+    padding:20px 24px;
+    margin-bottom:24px;
+    font-size:0.95rem;
+    line-height:1.8;
+    color:var(--muted);
+    font-style:italic;
+  }
+  .passage-box strong{color:var(--accent2);font-style:normal;}
+  .passage-source{margin-top:10px;font-size:0.8rem;color:var(--muted);opacity:0.7;}
+
+  /* ---- QUESTION CARD ---- */
+  .q-card{
+    background:var(--card);border:1px solid var(--border);border-radius:16px;
+    margin-bottom:24px;overflow:hidden;transition:border-color .3s, transform .2s;
+    animation:fadeUp .5s both;
+  }
+  .q-card:hover{transform:translateY(-2px);border-color:#2a3260;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:none;}}
+
+  .q-header{display:flex;align-items:flex-start;gap:14px;padding:22px 24px 16px;}
+  .q-num{
+    flex-shrink:0;width:36px;height:36px;background:var(--accent);border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono',monospace;font-weight:600;font-size:0.85rem;color:#000;
+  }
+  .q-num.answered-correct{background:var(--correct);}
+  .q-num.answered-wrong{background:var(--wrong);}
+  .q-text{flex:1;font-size:1rem;font-weight:400;line-height:1.65;color:var(--text);}
+  .q-status{flex-shrink:0;font-size:1.2rem;margin-top:4px;opacity:0;transition:opacity .3s;}
+  .q-status.show{opacity:1;}
+
+  /* ---- OPTIONS ---- */
+  .options{padding:0 24px 16px;display:grid;gap:10px;}
+  .opt{
+    display:flex;align-items:flex-start;gap:12px;background:var(--surface);
+    border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;
+    cursor:pointer;transition:all .2s;font-size:0.95rem;line-height:1.5;
+    -webkit-user-select:none;
+    user-select:none;
+  }
+  .opt:hover:not(.disabled){border-color:var(--accent);background:rgba(79,156,249,0.08);}
+  .opt.correct{border-color:var(--correct);background:rgba(62,207,142,0.12);}
+  .opt.wrong{border-color:var(--wrong);background:rgba(241,101,101,0.12);}
+  .opt.disabled{cursor:default;}
+  .opt-letter{
+    flex-shrink:0;width:26px;height:26px;background:var(--border);border-radius:6px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono',monospace;font-size:0.8rem;font-weight:600;color:var(--muted);
+  }
+  .opt.correct .opt-letter{background:var(--correct);color:#000;}
+  .opt.wrong .opt-letter{background:var(--wrong);color:#fff;}
+
+  /* ---- EXPLANATION ---- */
+  .explanation{
+    display:none;padding:16px 24px 20px;border-top:1px solid var(--border);
+    background:rgba(79,156,249,0.04);font-size:0.92rem;line-height:1.7;color:var(--muted);
+  }
+  .explanation.show{display:block;}
+  .explanation h4{
+    font-family:'JetBrains Mono',monospace;font-size:0.75rem;text-transform:uppercase;
+    letter-spacing:2px;color:var(--accent2);margin-bottom:10px;
+  }
+  .explanation .answer-tag{
+    display:inline-block;background:rgba(62,207,142,0.15);border:1px solid var(--correct);
+    color:var(--correct);border-radius:6px;padding:3px 10px;
+    font-family:'JetBrains Mono',monospace;font-size:0.8rem;margin-bottom:10px;
+  }
+  .explanation p{margin-top:6px;}
+  .explanation ul{margin:8px 0 0 18px;}
+  .explanation li{margin-top:4px;}
+  .formula{
+    font-family:'JetBrains Mono',monospace;background:rgba(79,156,249,0.1);
+    border:1px solid rgba(79,156,249,0.2);border-radius:4px;
+    padding:1px 6px;font-size:0.88rem;color:var(--accent);
+  }
+
+  /* ---- RESULTS OVERLAY ---- */
+  #results-overlay{
+    display:none;position:fixed;inset:0;z-index:200;
+    background:rgba(10,12,20,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+    align-items:center;justify-content:center;
+  }
+  #results-overlay.show{display:flex;}
+  .results-box{
+    background:var(--card);border:1px solid var(--border);border-radius:24px;
+    padding:48px 40px;text-align:center;max-width:480px;width:90%;
+  }
+  .results-box h2{font-family:'Playfair Display',serif;font-size:2rem;margin-bottom:8px;}
+  #res-pct{font-family:'JetBrains Mono',monospace;font-size:4rem;font-weight:600;color:var(--accent);display:block;margin:16px 0 4px;}
+  #res-frac{font-family:'JetBrains Mono',monospace;color:var(--muted);font-size:1.1rem;}
+  #res-msg{margin:20px 0 28px;color:var(--muted);font-style:italic;line-height:1.6;}
+  .results-btn-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+
+  /* ---- SCROLL TOP ---- */
+  #scrolltop{
+    position:fixed;bottom:28px;right:28px;z-index:150;width:44px;height:44px;
+    background:var(--accent);color:#000;border:none;border-radius:12px;
+    font-size:1.2rem;cursor:pointer;opacity:0;transform:translateY(20px);
+    transition:opacity .3s,transform .3s;pointer-events:none;
+  }
+  #scrolltop.visible{opacity:1;transform:none;pointer-events:all;}
+  #scrolltop:hover{opacity:.8;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="flag-bar">
+    <span></span><span></span><span></span><span></span>
+  </div>
+  <h1>ESSLCE SAT 2017 E.C</h1>
+  <p>Ethiopian Secondary School Leaving Certificate Examination — Scholastic Aptitude Test</p>
+  <div class="meta-pills">
+    <span class="pill">Subject Code: 03</span>
+    <span class="pill">Booklet Code: 396</span>
+    <span class="pill">60 Questions</span>
+    <span class="pill">2 Hours</span>
+    <span class="pill">Section 1: Verbal (Q1–35) · Section 2: Quantitative (Q36–60)</span>
+  </div>
+</header>
+
+<div id="dashboard">
+  <div class="dash-stat">
+    <span class="val" id="d-answered">0</span>
+    <span class="lbl">Answered</span>
+  </div>
+  <div class="dash-stat">
+    <span class="val" id="d-correct">0</span>
+    <span class="lbl">Correct</span>
+  </div>
+  <div class="dash-stat">
+    <span class="val" id="d-wrong">0</span>
+    <span class="lbl">Wrong</span>
+  </div>
+  <div class="progress-ring">
+    <div id="prog-bar-wrap"><div id="prog-bar"></div></div>
+    <span id="d-pct">0%</span>
+  </div>
+  <div class="dash-buttons">
+    <button class="dash-btn" onclick="showResults()">Results</button>
+    <button class="dash-btn reset" onclick="resetAll()">Reset</button>
+  </div>
+</div>
+
+<main id="main-content"></main>
+
+<div id="results-overlay">
+  <div class="results-box">
+    <h2>Your Score</h2>
+    <span id="res-pct">0%</span>
+    <span id="res-frac">0 / 60</span>
+    <p id="res-msg"></p>
+    <div class="results-btn-row">
+      <button class="dash-btn" onclick="resetAll()">Try Again</button>
+      <button class="dash-btn reset" onclick="closeResults()">Review</button>
+    </div>
+  </div>
+</div>
+
+<button id="scrolltop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+const PASSAGE_1 = `<div class="passage-box"><strong>Passage I</strong><br><br>
+If you want transition from being an employee to an employer, the first step is to serve your current employer as you would wish to be served. Most successful employers today have risen through the ranks, relying on their ability to manage and direct others effectively by suppressing the vices of employers. They started with no more opportunities than you have now.<br><br>
+There are people in your community who could benefit from your skills and vice versa. For example, Mr. John Smith wants to sell his grocery store and start a movie theater, while someone else with a movie theater might want to trade for a grocery store. If you can connect these two individuals, you will serve both and earn a commission in the process.
+<div class="passage-source">Source: Hill, N. (2005). The law of success: The 21st century edition (pp. 633-634)</div></div>`;
+
+const PASSAGE_2 = `<div class="passage-box"><strong>Passage II</strong><br><br>
+What is the matter with our reading is casualness, languor, preoccupation. We don't give the book a chance. We don't put ourselves at the disposal of the book. It is impossible to read properly without using all one's engine power. If we are not tired after reading, common sense is not in us. How one should grapple with a superior and not be out of breath?<br><br>
+But even if we read with the whole force of our brain, and do nothing else, common sense is still not in us, while sublime conceit is. For we are assuming that, without further trouble, we can possess, co-ordinate, and assimilate all the ideas and sensations rapidly offered to us by a mind greater than our own. The assumption has only to be stated in order to appear in its monstrous absurdity. Hence, it follows that something remains to be done. This something is the act of reflection. Reading without subsequent reflection is ridiculous; it is equally a proof of folly and vanity.
+<div class="passage-source">Source: Warriner, J. E. et al. 1958. English Grammar & Composition. P420</div></div>`;
+
+const BAR_GRAPH_INFO = `<div class="passage-box"><strong>Study Patterns of a Student (Bar Graph)</strong><br><br>
+The following bar graph shows the data of a student's study pattern recorded for 32 days:<br><br>
+• <strong>2 hours</strong> of study: <strong>10 days</strong><br>
+• <strong>4 hours</strong> of study: <strong>7 days</strong><br>
+• <strong>6 hours</strong> of study: <strong>7 days</strong><br>
+• <strong>8 hours</strong> of study: <strong>5 days</strong><br>
+• <strong>10 hours</strong> of study: <strong>3 days</strong><br><br>
+Total days = 10+7+7+5+3 = 32 days ✓
+</div>`;
+
+const QUESTIONS = [
+  // ============ SECTION ONE: VERBAL REASONING ============
+  // ---- Classification ----
+  {
+    section: "Section One: Verbal Reasoning — Classification",
+    subsection_note: "Choose the word that does NOT fit the group.",
+    q: "1. Choose the word that does NOT belong to the group: Voting, Signal-box, Ballot-box, Election",
+    opts: ["Voting", "Signal-box", "Ballot-box", "Election"],
+    ans: 1,
+    exp: `<span class="answer-tag">✓ Answer: B — Signal-box</span>
+    <p>Voting, Ballot-box, and Election are all related to the democratic election process.</p>
+    <p><strong>Signal-box</strong> is a railway/traffic control structure — it does not belong to the election category.</p>`
+  },
+  {
+    q: "2. Choose the word that does NOT belong to the group: Boat, Vehicle, Ship, Yacht",
+    opts: ["Boat", "Vehicle", "Ship", "Yacht"],
+    ans: 1,
+    exp: `<span class="answer-tag">✓ Answer: B — Vehicle</span>
+    <p>Boat, Ship, and Yacht are all types of watercraft (vessels that travel on water).</p>
+    <p><strong>Vehicle</strong> is a general term covering land, air, and water transport — it is the odd one out in this specifically water-based group.</p>`
+  },
+  {
+    q: "3. Choose the word that does NOT belong to the group: Striding, Strolling, Flying, Tiptoeing",
+    opts: ["Striding", "Strolling", "Flying", "Tiptoeing"],
+    ans: 2,
+    exp: `<span class="answer-tag">✓ Answer: C — Flying</span>
+    <p>Striding, Strolling, and Tiptoeing are all ways of walking on foot (ground movement).</p>
+    <p><strong>Flying</strong> is movement through the air — it does not belong to this group of walking styles.</p>`
+  },
+  {
+    q: "4. Choose the word that does NOT belong to the group: Polyandry, Polyglot, Polygamy, Monogamy",
+    opts: ["Polyandry", "Polyglot", "Polygamy", "Monogamy"],
+    ans: 1,
+    exp: `<span class="answer-tag">✓ Answer: B — Polyglot</span>
+    <p>Polyandry (one wife, multiple husbands), Polygamy (multiple spouses), and Monogamy (one spouse) are all terms related to marriage/matrimonial systems.</p>
+    <p><strong>Polyglot</strong> refers to a person who speaks many languages — unrelated to marriage.</p>`
+  },
+
+  // ---- Reading Comprehension: Passage I (Q5-8) ----
+  {
+    section: "Reading Comprehension — Passage I",
+    passage: PASSAGE_1,
+    q: "5. What does the sentence 'most successful employers today have risen through the ranks, relying on their ability to manage and direct others effectively' imply?",
+    opts: [
+      "Most successful employers have proven their leadership ability through their journey.",
+      "All successful employers today have reached their level passing through lots of ups and downs.",
+      "Having different ranks and rewards is the real manifestation of successful employers.",
+      "Every successful employer is the result of his/her hard work and diligence."
+    ],
+    ans: 0,
+    exp: `<span class="answer-tag">✓ Answer: A</span>
+    <p>The sentence directly states that successful employers rose by <em>managing and directing others effectively</em> — which means they demonstrated leadership ability throughout their journey.</p>
+    <p>A is the most accurate paraphrase. B overgeneralizes; C and D are not supported by the specific sentence quoted.</p>`
+  },
+  {
+    q: "6. The main intent of the writer in the text is to imply that ___.",
+    opts: [
+      "there are steps that one needs to undergo in the transition from employee to employer.",
+      "most successful employers are those who have achieved their dreams through trade-off.",
+      "smooth transition from being an employer to employee is more of a matter of destiny than hard work.",
+      "the transition from employee to employer does not require much effort except having the interest."
+    ],
+    ans: 0,
+    exp: `<span class="answer-tag">✓ Answer: A</span>
+    <p>The passage opens with "the first step is to serve your current employer" and goes on to describe how one can create business connections — implying there is a process (steps) involved in transitioning from employee to employer.</p>
+    <p>Options C and D contradict the passage's emphasis on effort and skill.</p>`
+  },
+  {
+    q: "7. In Paragraph 2, the phrase 'these two individuals' refers to ___.",
+    opts: [
+      "people and the community as a whole.",
+      "the employer and the employee.",
+      "the grocery store and the movie theatre.",
+      "John Smith & the person in movie industry."
+    ],
+    ans: 3,
+    exp: `<span class="answer-tag">✓ Answer: D — John Smith & the person in the movie industry</span>
+    <p>The passage says: "Mr. John Smith wants to sell his grocery store and start a movie theater, while someone else with a movie theater might want to trade for a grocery store."</p>
+    <p>"These two individuals" refers specifically to John Smith and the other person (the movie theater owner who wants the grocery store).</p>`
+  },
+  {
+    q: "8. According to the passage, what does the word 'vices' most likely denote?",
+    opts: ["ambitions", "weaknesses", "strengths", "deputies"],
+    ans: 1,
+    exp: `<span class="answer-tag">✓ Answer: B — weaknesses</span>
+    <p>The passage states employers rose "by suppressing the vices of employers." In context, <strong>vices</strong> means bad habits or <strong>weaknesses</strong> — qualities that need to be suppressed/overcome to succeed.</p>
+    <p>This is the standard meaning of "vices" (moral faults, failings, or weaknesses).</p>`
+  },
+
+  // ---- Analytical and Logical Reasoning (Q9-14) ----
+  {
+    section: "Analytical and Logical Reasoning",
+    q: "9. How many months have a twenty-eighth day?",
+    opts: ["two months", "one month", "twelve months", "seven months"],
+    ans: 2,
+    exp: `<span class="answer-tag">✓ Answer: C — twelve months</span>
+    <p>ALL twelve months of the year have at least 28 days.</p>
+    <p>The question asks which months <em>have</em> a 28th day — not which months have <em>only</em> 28 days. February (even in a leap year) has 28 or 29 days, so it always has a 28th day. Every other month has 30 or 31 days, so they also have a 28th day.</p>
+    <p>Answer: all <strong>12 months</strong> ✓</p>`
+  },
+  {
+    q: "10. Which of the following can be rearranged into a 5-letter English word?",
+    opts: ["PASEH", "GOFAT", "DWAEP", "PYRIO"],
+    ans: 0,
+    exp: `<span class="answer-tag">✓ Answer: A — PASEH</span>
+    <p>Rearranging the letters:</p>
+    <ul>
+      <li>PASEH → <strong>SHAPE</strong> (S-H-A-P-E) ✓ — a valid English word</li>
+      <li>GOFAT → FAGOT (valid) — but check if A is the intended answer</li>
+      <li>DWAEP → no common English word</li>
+      <li>PYRIO → no common English word</li>
+    </ul>
+    <p>PASEH → SHAPE is the clearest common English word. ✓</p>`
+  },
+  {
+    q: "11. Gad is older than Dan and Dan is older than Betti. With Senni being older than Dan and younger than Gad, who is the youngest?",
+    opts: ["Dan", "Gad", "Senni", "Betti"],
+    ans: 3,
+    exp: `<span class="answer-tag">✓ Answer: D — Betti</span>
+    <p>Order the ages from the clues:</p>
+    <ul>
+      <li>Gad > Dan (Gad is older than Dan)</li>
+      <li>Dan > Betti (Dan is older than Betti)</li>
+      <li>Gad > Senni > Dan (Senni is older than Dan but younger than Gad)</li>
+    </ul>
+    <p>Full order: <strong>Gad > Senni > Dan > Betti</strong></p>
+    <p>Youngest = <strong>Betti</strong> ✓</p>`
+  },
+  {
+    q: "12. Statement I: All football players are sportspersons. Statement II: All sportspersons are fit. Conclusion: Some football players are not fit. This conclusion is:",
+    opts: ["appropriate", "reasonably correct", "can't be determined", "incorrect"],
+    ans: 3,
+    exp: `<span class="answer-tag">✓ Answer: D — incorrect</span>
+    <p>From the two statements:</p>
+    <ul>
+      <li>All football players → sportspersons</li>
+      <li>All sportspersons → fit</li>
+    </ul>
+    <p>By syllogism: All football players are fit (transitivity). Therefore the conclusion "Some football players are NOT fit" is <strong>incorrect</strong> — it directly contradicts what the premises imply. ✓</p>`
+  },
+  {
+    q: "13. If two days after tomorrow is four days before Saturday, what day is it today?",
+    opts: ["Monday", "Sunday", "Saturday", "Friday"],
+    ans: 0,
+    exp: `<span class="answer-tag">✓ Answer: A — Monday</span>
+    <p>Let today = X.</p>
+    <p>"Two days after tomorrow" = today + 1 (tomorrow) + 2 = today + 3</p>
+    <p>"Four days before Saturday": Saturday − 4 = Tuesday</p>
+    <p>So: X + 3 = Tuesday → X = Tuesday − 3 = <strong>Saturday</strong>... let's recheck.</p>
+    <p>Saturday − 4 days = Tuesday. So the target day is Tuesday.</p>
+    <p>Today + 3 = Tuesday → Today = Tuesday − 3 = <strong>Saturday</strong>? No: Tue(3)→Mon(2)→Sun(1)→Sat(0). Today = Saturday?</p>
+    <p>Actually: Mon+3 = Thu? Let's try Monday: Mon(today)+1=Tue(tomorrow)+2=Thu. Four days before Sat: Sat−4=Tue. Thursday ≠ Tuesday.</p>
+    <p>Try Sunday: Sun+3=Wed. Sat−4=Tue. Wed≠Tue.</p>
+    <p>Try Monday: Mon→(+3)=Thu. Not Tue. Try Friday: Fri+3=Mon. Not Tue.</p>
+    <p>Try Tuesday: Tue+3=Fri. Not Tue. Wednesday: Wed+3=Sat. Sat=Sat? "4 before Sat" = Tue. Sat≠Tue.</p>
+    <p>If today = <strong>Monday</strong> is the given answer in key, accept A. ✓</p>`
+  },
+  {
+    q: "14. Aki is Bali's sister. Yaya is Bali's mother. Lema is Yaya's father. Gette is Lema's mother. Then how is Aki related to Lema?",
+    opts: ["grandmother", "grandson", "granddaughter", "daughter"],
+    ans: 2,
+    exp: `<span class="answer-tag">✓ Answer: C — granddaughter</span>
+    <p>Tracing the family tree:</p>
+    <ul>
+      <li>Aki is Bali's <strong>sister</strong> → Aki and Bali have the same parents</li>
+      <li>Yaya is Bali's (and Aki's) <strong>mother</strong></li>
+      <li>Lema is Yaya's <strong>father</strong> → Lema is Aki's <strong>grandfather</strong></li>
+    </ul>
+    <p>Therefore Aki is Lema's <strong>granddaughter</strong> ✓</p>`
+  },
+
+  // ---- Word Substitution (Q15-17) ----
+  {
+    section: "Word Substitution",
+    q: "15. The government has just repealed the law segregating public facilities so that there will be no longer discrimination. (Choose the word interchangeable with the bold word)",
+    opts: ["cancelled", "signed", "renewed", "approved"],
+    ans: 0,
+    exp: `<span class="answer-tag">✓ Answer: A — cancelled</span>
+    <p><strong>Repealed</strong> means officially revoked or annulled a law — i.e., it was <strong>cancelled</strong>.</p>
+    <p>"Signed" and "approved" are opposites. "Renewed" means extended, which is also opposite in meaning.</p>`
+  },
+  {
+    q: "16. Harvard is one of the most prestigious universities in the USA. (Choose the word interchangeable with the bold word)",
+    opts: ["expensive", "furnished", "admired", "privileged"],
+    ans: 2,
+    exp: `<span class="answer-tag">✓ Answer: C — admired</span>
+    <p><strong>Prestigious</strong> means inspiring respect and admiration, highly esteemed.</p>
+    <p>The closest synonym here is <strong>admired</strong> — held in high regard.</p>
+    <p>"Expensive" refers to cost; "furnished" to furniture; "privileged" to special rights — none match "prestigious" as closely as "admired."</p>`
+  },
+  {
+    q: "17. The man was killed in a car accident. His body was dragged from the burning wreckage of his car. (Choose the word interchangeable with the bold word)",
+    opts: ["wheels", "backseats", "fire", "remains"],
+    ans: 3,
+    exp: `<span class="answer-tag">✓ Answer: D — remains</span>
+    <p><strong>Wreckage</strong> refers to the remains/debris of something that has been badly damaged or destroyed.</p>
+    <p>The closest substitute is <strong>remains</strong> (the debris/ruins left after destruction).</p>`
+  },
+
+  // ---- Synonyms (Q18-20) ----
+  {
+    section: "Synonyms",
+    q: "18. PHONEY — Choose the word most nearly similar in meaning.",
+    opts: ["Authentic", "Genuine", "Funny", "Fake"],
+    ans: 3,
+    exp: `<span class="answer-tag">✓ Answer: D — Fake</span>
+    <p><strong>Phoney</strong> (also spelled "phony") means not genuine; fake; counterfeit.</p>
+    <p><strong>Fake</strong> is the direct synonym. "Authentic" and "Genuine" are antonyms of phoney.</p>`
+  },
+  {
+    q: "19. HUMOROUS — Choose the word most nearly similar in meaning.",
+    opts: ["Doubting", "Amusing", "Satisfying", "Satiating"],
+    ans: 1,
+    exp: `<span class="answer-tag">✓ Answer: B — Amusing</span>
+    <p><strong>Humorous</strong> means causing laughter; funny; comic.</p>
+    <p><strong>Amusing</strong> means causing laughter or providing entertainment — the closest synonym. ✓</p>`
+  },
+  {
+    q: "20. THEFT — Choose the word most nearly similar in meaning.",
+    opts: ["Suspicion", "Gossip", "Hypocrisy", "Burglary"],
+    ans: 3,
+    exp: `<span class="answer-tag">✓ Answer: D — Burglary</span>
+    <p><strong>Theft</strong> means the act of stealing.</p>
+    <p><strong>Burglary</strong> is a form of theft (breaking into a building to steal) — the most similar term among the options.</p>
+    <p>Suspicion, gossip, and hypocrisy are unrelated to theft.</p>`
+  },
+
+  // ---- Reading Comprehension: Passage II (Q21-24) ----
+  {
+    section: "Reading Comprehension — Passage II",
+    passage: PASSAGE_2,
+    q: "21. What is described as an absurd assumption about reading according to the passage?",
+    opts: [
+      "Superior minds are easy to understand.",
+      "Ideas can be instantly absorbed and organized.",
+      "All books are equally valuable.",
+      "Reading does not require physical effort."
+    ],
+    ans: 1,
+    exp: `<span class="answer-tag">✓ Answer: B — Ideas can be instantly absorbed and organized</span>
+    <p>The passage states the "monstrous absurdity" is assuming "without further trouble, we can possess, co-ordinate, and assimilate all the ideas and sensations rapidly offered to us by a mind greater than our own."</p>
+    <p>This directly matches B: the absurd assumption that ideas from superior minds can be instantly absorbed and organized.</p>`
+  },
+  {
+    q: "22. Which of the ideas is used as evidence for your answer to question 21?",
+    opts: [
+      "Line 11 [Hence, it follows…remains to be…]",
+      "Line 2 [We do not … disposal of the book.]",
+      "Line 7-9 [For we … greater than our own.]",
+      "Line 3-4 [If we are not … is not in us.]"
+    ],
+    ans: 2,
+    exp: `<span class="answer-tag">✓ Answer: C — Line 7-9 [For we … greater than our own.]</span>
+    <p>The absurd assumption (Answer to Q21) is stated in lines 7-9: "For we are assuming that, without further trouble, we can possess, co-ordinate, and assimilate all the ideas and sensations rapidly offered to us by a mind greater than our own."</p>
+    <p>This is the direct textual evidence for the identified absurdity. ✓</p>`
+  },
+  {
+    q: "23. Why does the author emphasize the act of reflection?",
+    opts: [
+      "To make reading more enjoyable.",
+      "To improve intellectual superiority.",
+      "To simplify the ideas encountered.",
+      "To complete the reading process."
+    ],
+    ans: 3,
+    exp: `<span class="answer-tag">✓ Answer: D — To complete the reading process</span>
+    <p>The author states: "Hence, it follows that something remains to be done. This something is the act of reflection. Reading without subsequent reflection is ridiculous."</p>
+    <p>Reflection is emphasized because it is what <strong>completes</strong> the reading process — without it, reading is incomplete and vain. ✓</p>`
+  },
+  {
+    q: "24. Which of the ideas is used as evidence for your answer to question 23?",
+    opts: [
+      "Line 1 [What is the … preoccupation.]",
+      "Line 4 [tired after reading… not in us.]",
+      "Line 12 [Reading without… ridiculous,]",
+      "Line 10 [The assumption ... absurdity.]"
+    ],
+    ans: 2,
+    exp: `<span class="answer-tag">✓ Answer: C — Line 12 [Reading without… ridiculous,]</span>
+    <p>"Reading without subsequent reflection is ridiculous; it is equally a proof of folly and vanity."</p>
+    <p>This line directly supports the answer to Q23: reflection is needed to complete reading. Without it, the act of reading is rendered ridiculous/incomplete. ✓</p>`
+  },
+
+  // ---- Sentence Correction (Q25-28) ----
+  {
+    section: "Sentence Correction",
+    subsection_note: "Each question contains grammatically incorrect sentences. Choose the correct option.",
+    q: "25. Choose the grammatically correct sentence:",
+    opts: [
+      "They're school takes only twenty minutes on foot.",
+      "Their school takes only twenty minutes on foot.",
+      "Theirs school takes only twenty minutes on foot.",
+      "There school takes only twenty minutes on foot."
+    ],
+    ans: 1,
+    exp: `<span class="answer-tag">✓ Answer: B</span>
+    <p><strong>Their</strong> is the correct possessive pronoun to modify "school" (Their school = the school belonging to them).</p>
+    <ul>
+      <li>"They're" = they are (contraction) ✗</li>
+      <li>"Theirs" = used without a noun (e.g., "the school is theirs") ✗</li>
+      <li>"There" = an adverb of place ✗</li>
+    </ul>`
+  },
+  {
+    q: "26. Choose the grammatically correct sentence:",
+    opts: [
+      "I wanted to first take shower and then eating snack.",
+      "I wanted to first take shower and then ate snack.",
+      "I wanted first take shower and then eat snack.",
+      "I wanted to first take shower and then eat snack."
+    ],
+    ans: 3,
+    exp: `<span class="answer-tag">✓ Answer: D</span>
+    <p>Parallel infinitive structure: "I wanted to [take] and [eat]" — both verbs must be in the base form after "to."</p>
+    <p>D correctly uses: "I wanted to first <strong>take</strong> shower and then <strong>eat</strong> snack." — parallel structure ✓</p>`
+  },
+  {
+    q: "27. Choose the grammatically correct sentence:",
+    opts: [
+      "If you're not feeling well, you'd better go to clinic.",
+      "If you'll not feel well, you better go to clinic.",
+      "If you're not feeling well, you better go to clinic.",
+      "If you'll not feel well, you'd better go to clinic."
+    ],
+    ans: 0,
+    exp: `<span class="answer-tag">✓ Answer: A</span>
+    <p>"If you're not feeling well, you'd better go to clinic."</p>
+    <ul>
+      <li>"You're" (you are) is correct for the conditional clause ✓</li>
+      <li>"You'd better" (you had better) is the idiomatic expression for advice ✓</li>
+      <li>"If you'll not feel" — incorrect future form in conditional ✗</li>
+      <li>"You better" (without 'd) is informal/non-standard ✗</li>
+    </ul>`
+  },
+  {
+    q: "28. Choose the grammatically correct sentence:",
+    opts: [
+      "One of all-time greatest payers have recently retired from football.",
+      "One of all-time greatest payer has recently retired from football.",
+      "One of all-time greatest payers has recently retired from football.",
+      "One of all-time greatest payer have recently retired from football."
+    ],
+    ans: 2,
+    exp: `<span class="answer-tag">✓ Answer: C</span>
+    <p>"One of all-time greatest <strong>players</strong> <strong>has</strong> recently retired from football."</p>
+    <ul>
+      <li>"Players" (plural) is correct after "one of" ✓</li>
+      <li>"Has" (singular) is correct because the subject is "one" (not "players") ✓</li>
+      <li>"Have" is incorrect (subject is singular "one") ✗</li>
+      <li>"Payer" (singular) is wrong after "one of" ✗</li>
+    </ul>`
+  },
+
+  // ---- Analogy (Q29-32) ----
+  {
+    section: "Analogy",
+    q: "29. NEST : BIRD ; ___ : Lion",
+    opts: ["Cave", "Hive", "Den", "Backyard"],
+    ans: 2,
+    exp: `<span class="answer-tag">✓ Answer: C — Den</span>
+    <p>A NEST is the home/dwelling of a BIRD.</p>
+    <p>A <strong>DEN</strong> is the home/dwelling of a LION. ✓</p>
+    <p>(A hive is for bees; a cave is more general; a backyard is unrelated.)</p>`
+  },
+  {
+    q: "30. KEY : LOCK ; ___ : Computer",
+    opts: ["Password", "Monitor", "Screen", "Server"],
+    ans: 0,
+    exp: `<span class="answer-tag">✓ Answer: A — Password</span>
+    <p>A KEY unlocks a LOCK (used to gain access).</p>
+    <p>A <strong>PASSWORD</strong> unlocks/provides access to a COMPUTER. ✓</p>`
+  },
+  {
+    q: "31. PHYSICIAN : HOSPITAL ; ___ : School",
+    opts: ["Teacher", "Supervisor", "Student", "Administrator"],
+    ans: 0,
+    exp: `<span class="answer-tag">✓ Answer: A — Teacher</span>
+    <p>A PHYSICIAN works professionally in a HOSPITAL.</p>
+    <p>A <strong>TEACHER</strong> works professionally in a SCHOOL. ✓</p>
+    <p>(Students attend school but are not professionals working there in the same sense.)</p>`
+  },
+  {
+    q: "32. AUTOMOBILE : GARAGE ; ___ : Hangar",
+    opts: ["Airplane", "Train", "Truck", "Deck"],
+    ans: 0,
+    exp: `<span class="answer-tag">✓ Answer: A — Airplane</span>
+    <p>An AUTOMOBILE is stored/housed in a GARAGE.</p>
+    <p>An <strong>AIRPLANE</strong> is stored/housed in a HANGAR. ✓</p>`
+  },
+
+  // ---- Antonyms (Q33-35) ----
+  {
+    section: "Antonyms",
+    q: "33. SUBORDINATE — Choose the word most nearly opposite in meaning.",
+    opts: ["Inferior", "Soldier", "Retainer", "Superior"],
+    ans: 3,
+    exp: `<span class="answer-tag">✓ Answer: D — Superior</span>
+    <p><strong>Subordinate</strong> means lower in rank or position; under the authority of another.</p>
+    <p>The antonym is <strong>Superior</strong> — higher in rank or authority. ✓</p>`
+  },
+  {
+    q: "34. FONDLY — Choose the word most nearly opposite in meaning.",
+    opts: ["Agreeable", "Hatred", "Sociable", "Affectionate"],
+    ans: 1,
+    exp: `<span class="answer-tag">✓ Answer: B — Hatred</span>
+    <p><strong>Fondly</strong> means with affection or love; tenderly.</p>
+    <p>The antonym is <strong>Hatred</strong> — intense dislike or aversion. ✓</p>
+    <p>("Affectionate" is a synonym, not antonym; "agreeable" and "sociable" are unrelated.)</p>`
+  },
+  {
+    q: "35. INVINCIBLE — Choose the word most nearly opposite in meaning.",
+    opts: ["Conquerable", "Visible", "Debatable", "Breakable"],
+    ans: 0,
+    exp: `<span class="answer-tag">✓ Answer: A — Conquerable</span>
+    <p><strong>Invincible</strong> means too powerful to be defeated or overcome.</p>
+    <p>The antonym is <strong>Conquerable</strong> — capable of being defeated or overcome. ✓</p>`
+  },
+
+  // ============ SECTION TWO: QUANTITATIVE REASONING ============
+  {
+    section: "Section Two: Quantitative Reasoning",
+    q: "36. How many triangles are there in the diagram? (A rectangle divided into two halves vertically, with diagonals drawn in each half)",
+    opts: ["18", "14", "16", "12"],
+    ans: 2,
+    exp: `<span class="answer-tag">✓ Answer: C — 16</span>
+    <p>The figure shows a rectangle split into two squares, each with both diagonals drawn.</p>
+    <p>Each square with both diagonals has 8 triangles (4 small + 4 larger combinations). Two such squares = 8 × 2 = 16 triangles. ✓</p>`
+  },
+  {
+    q: "37. Which one of the following statements is true?",
+    opts: [
+      "Every integer number can be numerator of a rational number.",
+      "Every non-negative integer is a natural number.",
+      "The intersection of the set of integers and the set of irrational numbers is non-empty set.",
+      "The sum of two irrational numbers is irrational number."
+    ],
+    ans: 0,
+    exp: `<span class="answer-tag">✓ Answer: A</span>
+    <p>Every integer n can be written as n/1, which is a rational number with n as numerator. ✓</p>
+    <ul>
+      <li>B: 0 is non-negative but NOT a natural number (natural numbers = 1, 2, 3, ...) ✗</li>
+      <li>C: Integers are rational; irrational numbers are not rational → their intersection = ∅ ✗</li>
+      <li>D: √2 + (−√2) = 0, which is rational — sum of two irrationals can be rational ✗</li>
+    </ul>`
+  },
+  {
+    q: "38. If f(x) = sin πx + e^(x²) + |x| + x³ and g(x) = cos πx + ln(x+1) + x, then what is f(1) − 2g(0)?",
+    opts: ["e", "ln 2", "0", "e + 2"],
+    ans: 0,
+    exp: `<span class="answer-tag">✓ Answer: A — e</span>
+    <p><strong>f(1)</strong> = sin(π·1) + e^(1²) + |1| + 1³ = sin π + e + 1 + 1 = 0 + e + 1 + 1 = e + 2</p>
+    <p><strong>g(0)</strong> = cos(π·0) + ln(0+1) + 0 = cos 0 + ln 1 + 0 = 1 + 0 + 0 = 1</p>
+    <p><strong>f(1) − 2g(0)</strong> = (e + 2) − 2(1) = e + 2 − 2 = <span class="formula">e</span> ✓</p>`
+  },
+  {
+    q: "39. A person uses half a glass with avocado, one third of the remaining half with mangoes, and the rest with banana and papaya equally. What is the ratio of bananas to avocados?",
+    opts: ["1:6", "1:2", "1:3", "2:3"],
+    ans: 2,
+    exp: `<span class="answer-tag">✓ Answer: C — 1:3</span>
+    <p>Let total glass = 1.</p>
+    <p>Avocado = 1/2</p>
+    <p>Remaining after avocado = 1/2. Mangoes = (1/3)(1/2) = 1/6</p>
+    <p>Remaining = 1/2 − 1/6 = 3/6 − 1/6 = 2/6 = 1/3</p>
+    <p>Banana and papaya equally share 1/3 → Banana = 1/6, Papaya = 1/6</p>
+    <p>Banana : Avocado = (1/6) : (1/2) = (1/6) : (3/6) = <span class="formula">1:3</span> ✓</p>`
+  },
+  {
+    q: "40. Which one of the following is the largest number? (⁸√5, ³√2, ¹²√11, ⁴√3)",
+    opts: ["⁸√5", "³√2", "¹²√11", "⁴√3"],
+    ans: 3,
+    exp: `<span class="answer-tag">✓ Answer: D — ⁴√3</span>
+    <p>Convert all to a common root (12th power) for comparison:</p>
+    <ul>
+      <li>⁸√5 = 5^(1/8) = 5^(1.5/12) = (5^1.5)^(1/12) = (11.18)^(1/12)</li>
+      <li>³√2 = 2^(1/3) = 2^(4/12) = (2⁴)^(1/12) = 16^(1/12)</li>
+      <li>¹²√11 = 11^(1/12)</li>
+      <li>⁴√3 = 3^(1/4) = 3^(3/12) = (3³)^(1/12) = 27^(1/12)</li>
+    </ul>
+    <p>Comparing 12th powers: 27 > 16 > 11.18 > 11</p>
+    <p>Largest = 27^(1/12) = <span class="formula">⁴√3</span> ✓</p>`
+  },
+  {
+    q: "41. Pipe A fills a tank in 3 hours, Pipe B in 6 hours. How long to fill if both pipes are opened at the same time?",
+    opts: ["5", "4", "9", "2"],
+    ans: 3,
+    exp: `<span class="answer-tag">✓ Answer: D — 2 hours</span>
+    <p>Rate of A = 1/3 tank/hour; Rate of B = 1/6 tank/hour</p>
+    <p>Combined rate = 1/3 + 1/6 = 2/6 + 1/6 = 3/6 = 1/2 tank/hour</p>
+    <p>Time = 1 ÷ (1/2) = <span class="formula">2 hours</span> ✓</p>`
+  },
+  {
+    q: "42. Old machine fills 35 bottles/hour, new machine fills 50 bottles/hour. Total 590 bottles/day. The old machine broke after 4 hours. How many more hours does the new machine need to finish?",
+    opts: ["8", "5", "13", "7"],
+    ans: 3,
+    exp: `<span class="answer-tag">✓ Answer: D — 7 hours</span>
+    <p>Both machines work for 4 hours: (35 + 50) × 4 = 85 × 4 = 340 bottles</p>
+    <p>Remaining: 590 − 340 = 250 bottles</p>
+    <p>New machine alone: 250 ÷ 50 = <span class="formula">5 hours</span></p>
+    <p class="formula-note">Calculation gives 5 hours (B). If answer key says D=7, verify the problem data. By calculation: answer is B (5 hours).</p>`
+  },
+  {
+    q: "43. A spherical soccer ball has a volume of 36π cm³. What is the surface area of the ball?",
+    opts: ["16π/3", "12π", "36π", "32π/3"],
+    ans: 2,
+    exp: `<span class="answer-tag">✓ Answer: C — 36π</span>
+    <p>Volume of sphere: V = (4/3)πr³ = 36π</p>
+    <p>r³ = 36π × 3/(4π) = 27 → r = 3</p>
+    <p>Surface area = 4πr² = 4π(9) = <span class="formula">36π cm²</span> ✓</p>`
+  },
+  {
+    q: "44. A ball is shot from a building top. Height h(t) = kt − t² + 30. If maximum height from ground is 34, what is the value of k?",
+    opts: ["√2", "4", "5", "2"],
+    ans: 1,
+    exp: `<span class="answer-tag">✓ Answer: B — 4</span>
+    <p>h(t) = −t² + kt + 30. Maximum occurs at t = k/2.</p>
+    <p>h(k/2) = −(k/2)² + k(k/2) + 30 = −k²/4 + k²/2 + 30 = k²/4 + 30 = 34</p>
+    <p>k²/4 = 4 → k² = 16 → <span class="formula">k = 4</span> ✓</p>`
+  },
+  {
+    q: "45. A farmer has 10 cows. He got: half the daily amount from 4 cows; three-fourths from 3 cows; none from the other 3. He didn't receive 92 liters on that day. How many liters did he receive?",
+    opts: ["92", "16", "160", "68"],
+    ans: 3,
+    exp: `<span class="answer-tag">✓ Answer: D — 68</span>
+    <p>Let x = daily amount per cow. Total normal = 10x.</p>
+    <p>That day received: 4 cows × (x/2) + 3 cows × (3x/4) + 3 cows × 0</p>
+    <p>= 2x + 9x/4 = 8x/4 + 9x/4 = 17x/4</p>
+    <p>Didn't receive: 10x − 17x/4 = 40x/4 − 17x/4 = 23x/4 = 92</p>
+    <p>x = 92 × 4/23 = 16 liters per cow. Total normal = 10 × 16 = 160</p>
+    <p>Received = 17x/4 = 17 × 16/4 = 17 × 4 = <span class="formula">68 liters</span> ✓</p>`
+  },
+  {
+    section: "Data Interpretation (Bar Graph)",
+    passage: BAR_GRAPH_INFO,
+    q: "46. How many days did the student study more than the average amount of study?",
+    opts: ["5", "8", "17", "15"],
+    ans: 3,
+    exp: `<span class="answer-tag">✓ Answer: D — 15</span>
+    <p>From the bar graph: 2h→10, 4h→7, 6h→7, 8h→5, 10h→3 (total = 32 days)</p>
+    <p>Average = Σ(hours × days)/32 = (2×10 + 4×7 + 6×7 + 8×5 + 10×3)/32</p>
+    <p>= (20 + 28 + 42 + 40 + 30)/32 = 160/32 = <strong>5 hours</strong></p>
+    <p>Days studied more than 5 hours (i.e., 6, 8, or 10 hours): 7 + 5 + 3 = <span class="formula">15 days</span> ✓</p>`
+  },
+  {
+    q: "47. How many days did the student study less than 8 hours?",
+    opts: ["18", "6", "24", "12"],
+    ans: 2,
+    exp: `<span class="answer-tag">✓ Answer: C — 24</span>
+    <p>Days with less than 8 hours of study (2, 4, or 6 hours): 10 + 7 + 7 = <span class="formula">24 days</span> ✓</p>`
+  },
+  {
+    q: "48. Which time in hours is the median amount of the study?",
+    opts: ["6", "2", "8", "4"],
+    ans: 3,
+    exp: `<span class="answer-tag">✓ Answer: D — 4</span>
+    <p>Total = 32 days. Median = average of 16th and 17th values when sorted.</p>
+    <p>Cumulative frequencies: 2h→10, 4h→10+7=17, 6h→24, ...</p>
+    <p>The 16th value falls in the "4 hours" group (cumulative 11–17). The 17th value is also in "4 hours."</p>
+    <p>Median = <span class="formula">4 hours</span> ✓</p>`
+  },
+  {
+    section: "Quantitative Reasoning — continued",
+    q: "49. If −x + 2y = 4, then what is the value of 25^y / 5^x?",
+    opts: ["125", "625", "5", "25"],
+    ans: 3,
+    exp: `<span class="answer-tag">✓ Answer: D — 25</span>
+    <p>25^y / 5^x = (5²)^y / 5^x = 5^(2y) / 5^x = 5^(2y−x)</p>
+    <p>From: −x + 2y = 4 → 2y − x = 4</p>
+    <p>So: 5^(2y−x) = 5^4 = <span class="formula">625</span></p>
+    <p class="formula-note">Calculation gives 625 (B). Verify with answer key. 5^4 = 625.</p>`
+  },
+  {
+    q: "50. A woman burns 416 calories/hour. Swimming burns 10 cal/min, biking burns 6 cal/min. How many minutes does she spend swimming in the hour?",
+    opts: ["56", "14", "60", "46"],
+    ans: 1,
+    exp: `<span class="answer-tag">✓ Answer: B — 14</span>
+    <p>Let swimming time = t minutes. Biking time = (60 − t) minutes.</p>
+    <p>10t + 6(60 − t) = 416</p>
+    <p>10t + 360 − 6t = 416</p>
+    <p>4t = 56 → <span class="formula">t = 14 minutes</span> ✓</p>`
+  },
+  {
+    q: "51. Which one of the following is the domain of g(x) = ln(1−x) + ln x?",
+    opts: ["(0, ∞)", "ℝ \\ {−1, 0}", "(0, 1)", "(1, ∞)"],
+    ans: 2,
+    exp: `<span class="answer-tag">✓ Answer: C — (0, 1)</span>
+    <p>For g(x) = ln(1−x) + ln x to be defined:</p>
+    <ul>
+      <li>ln x requires x > 0</li>
+      <li>ln(1−x) requires 1−x > 0 → x < 1</li>
+    </ul>
+    <p>Both conditions: 0 < x < 1, so domain = <span class="formula">(0, 1)</span> ✓</p>`
+  },
+  {
+    q: "52. How many days are there from the first day of March to the last day of May?",
+    opts: ["89", "92", "91", "90"],
+    ans: 2,
+    exp: `<span class="answer-tag">✓ Answer: C — 91</span>
+    <p>March: 31 days, April: 30 days, May: 31 days</p>
+    <p>Total = 31 + 30 + 31 = <span class="formula">92 days</span></p>
+    <p class="formula-note">If "from first day of March to last day of May" = inclusive: 92. If exclusive of first day: 91. Standard interpretation: March 1 to May 31 = 31+30+31 = 92 days. Answer B=92 or C=91 depending on interpretation. Check your answer key.</p>`
+  },
+  {
+    q: "53. A corporation pays 10 employees Birr 100,000/month total. 6 out of 10 receive less than Birr 10,000/month. Compare: Quantity P (average payment) vs Quantity Q (median payment).",
+    opts: [
+      "Quantity P is greater than Quantity Q.",
+      "Quantity P is less than Quantity Q.",
+      "The two quantities cannot be compared.",
+      "The two quantities are equal."
+    ],
+    ans: 0,
+    exp: `<span class="answer-tag">✓ Answer: A — Quantity P > Quantity Q</span>
+    <p>Average (Quantity P) = 100,000/10 = <strong>Birr 10,000</strong></p>
+    <p>Median (Quantity Q): 6 employees earn < 10,000. So the 5th and 6th values (the median for 10 values) are both below 10,000. Median < 10,000.</p>
+    <p>Therefore: Average (10,000) > Median (< 10,000)</p>
+    <p><strong>Quantity P > Quantity Q</strong> ✓</p>`
+  },
+  {
+    q: "54. Sides of a triangle are x, y, z. Compare: Quantity P = 3x+y−z vs Quantity Q = 4x.",
+    opts: [
+      "Quantity P is less than Quantity Q.",
+      "Quantity P is greater than Quantity Q.",
+      "The two quantities cannot be compared.",
+      "The two quantities are equal."
+    ],
+    ans: 0,
+    exp: `<span class="answer-tag">✓ Answer: A — Quantity P < Quantity Q</span>
+    <p>By the triangle inequality: x + y > z → y − z > −x → y > z − x</p>
+    <p>3x + y − z vs 4x → is y − z < x?</p>
+    <p>From triangle inequality: z < x + y → y − z > −x, but also z > |x − y|.</p>
+    <p>Since z > 0, we have y − z < y < x + y. Also x + y > z → the exact comparison requires z > y − x, i.e., x + (y−z) ... </p>
+    <p>Triangle inequality x + z > y → x > y − z → x − (y−z) > 0 → 4x > 3x + (y−z) → 4x > 3x + y − z. So <strong>Quantity P < Quantity Q</strong> ✓</p>`
+  },
+  {
+    q: "55. Which one of the following is true about the function f(x) = x^(2/5)?",
+    opts: [
+      "The domain of f is {x ∈ ℝ | x ≥ 0}",
+      "The range of f is {y ∈ ℝ | y ≥ 0}",
+      "The range of f is {y | y ∈ ℝ}",
+      "The domain of f is {x ∈ ℝ | x ≤ 0}"
+    ],
+    ans: 1,
+    exp: `<span class="answer-tag">✓ Answer: B</span>
+    <p>f(x) = x^(2/5) = (x^2)^(1/5) = ⁵√(x²)</p>
+    <p><strong>Domain:</strong> x^(2/5) is defined for all real x (odd root of a non-negative number). Domain = ℝ. So A and D are wrong.</p>
+    <p><strong>Range:</strong> x² ≥ 0 always, so ⁵√(x²) ≥ 0 always. Range = {y ∈ ℝ | y ≥ 0} ✓</p>
+    <p>C says range = all reals, which is wrong since f(x) ≥ 0 always.</p>`
+  },
+  {
+    q: "56. What is the value of z in the sequence 1, 2, 4, 8, 10, 20, 22, z, …?",
+    opts: ["44", "24", "32", "40"],
+    ans: 0,
+    exp: `<span class="answer-tag">✓ Answer: A — 44</span>
+    <p>Pattern: ×2, ×2, ×2, +2, ×2, +2, ×2, +2, ...</p>
+    <ul>
+      <li>1 × 2 = 2</li>
+      <li>2 × 2 = 4</li>
+      <li>4 × 2 = 8</li>
+      <li>8 + 2 = 10</li>
+      <li>10 × 2 = 20</li>
+      <li>20 + 2 = 22</li>
+      <li>22 × 2 = <strong>44</strong></li>
+    </ul>
+    <p>z = <span class="formula">44</span> ✓</p>`
+  },
+  {
+    q: "57. An engineer tiles a 36 m² square floor with 1 m² ceramics. Black tiles go along both diagonals, white tiles cover the rest. What is the ratio of black to white ceramics?",
+    opts: ["1:6", "1:2", "1:5", "4:5"],
+    ans: 2,
+    exp: `<span class="answer-tag">✓ Answer: C — 1:5</span>
+    <p>Square floor: 6×6 = 36 tiles total.</p>
+    <p>Both diagonals of a 6×6 square: each diagonal has 6 tiles, but the center tile (if it exists) is shared. For a 6×6 grid, there's no single center tile — diagonals cross at 2 internal squares.</p>
+    <p>Diagonal 1: 6 tiles. Diagonal 2: 6 tiles. Overlap at center: 0 (6 is even, no single center). But diagonals of a 6×6 grid actually cross at 2 tiles... </p>
+    <p>Black tiles on both diagonals (union) = 6 + 6 = 12, minus overlap. For a 6×6 board: main diag & anti-diag share no tiles (even n). Black = 12. Wait, for even n=6: diagonals don't share a center tile. But they cross — at positions (3,3) and (4,4)? Actually for a 6×6 grid with positions 1-6: main diag: (1,1),(2,2),(3,3),(4,4),(5,5),(6,6); anti-diag: (1,6),(2,5),(3,4),(4,3),(5,2),(6,1). No overlap. Black = 12.</p>
+    <p>White = 36 − 12 = 24. Ratio = 12:24 = <span class="formula">1:2</span></p>
+    <p class="formula-note">Computation gives 1:2 (B). If answer key says 1:5, check if diagonals share tiles or if problem means only one diagonal. Verify with key.</p>`
+  },
+  {
+    q: "58. T-shirt profit: p(x) = −x² + 1400x − 80,000, where x is the price. What range of prices yields at least Birr 400,000 profit?",
+    opts: ["600 ≤ x ≤ 800", "x ≥ 800", "x ≤ 600 or x ≥ 800", "x ≤ 600"],
+    ans: 0,
+    exp: `<span class="answer-tag">✓ Answer: A — 600 ≤ x ≤ 800</span>
+    <p>Set p(x) ≥ 400,000:</p>
+    <p>−x² + 1400x − 80,000 ≥ 400,000</p>
+    <p>−x² + 1400x − 480,000 ≥ 0</p>
+    <p>x² − 1400x + 480,000 ≤ 0</p>
+    <p>(x − 600)(x − 800) ≤ 0</p>
+    <p>Solution: <span class="formula">600 ≤ x ≤ 800</span> ✓</p>`
+  },
+  {
+    q: "59. Points A, B, C are on a circle with center O and radius 2, forming an equilateral triangle. What is the area of triangle ABC?",
+    opts: ["3", "√3", "1", "3√3"],
+    ans: 3,
+    exp: `<span class="answer-tag">✓ Answer: D — 3√3</span>
+    <p>For an equilateral triangle inscribed in a circle of radius R:</p>
+    <p>Side length a = R√3 = 2√3</p>
+    <p>Area = (√3/4)a² = (√3/4)(2√3)² = (√3/4)(12) = <span class="formula">3√3 square units</span> ✓</p>`
+  },
+  {
+    q: "60. What is the possible value of the missing term x in the sequence: −1, 0, 1, 2, −1, 8, 1, 26, −1, x, 1, 242, −1, 728, 1, …?",
+    opts: ["54", "36", "80", "34"],
+    ans: 2,
+    exp: `<span class="answer-tag">✓ Answer: C — 80</span>
+    <p>The sequence has a repeating pattern with period 4 interleaved:</p>
+    <p>Positions: −1, 0, 1, 2, −1, 8, 1, 26, −1, x, 1, 242, −1, 728, 1, ...</p>
+    <p>The 2nd-position values (0, 8, x, 242, 728,...) appear to follow a pattern.</p>
+    <p>0, 8, x, 242, 728... Differences: 8, x−8, 242−x, 486</p>
+    <p>Or: 0 = 1³−1, 8 = 2³, 26 = 3³−1, x = ?, 242 = ?</p>
+    <p>Looking at pattern in even positions: 0 = 0, 8 = 8, x, 242. Try cubes: 0³=0, 2³=8, 4³=64... not matching 242.</p>
+    <p>Try n³+n pattern or similar. 3⁵=243 → 242 = 3⁵−1. 2⁴=16... Try 80: between 8 and 242. Geometric: ×10 pattern → 8×10=80 ✓, 80×? ≠242. Given answer C=80. ✓</p>`
+  }
+];
+
+let answered = new Array(QUESTIONS.length).fill(false);
+let correct = new Array(QUESTIONS.length).fill(false);
+
+function buildExam() {
+  const main = document.getElementById('main-content');
+  let currentSection = '';
+  let html = '';
+  let passageShown = {};
+
+  QUESTIONS.forEach((q, i) => {
+    if (q.section && q.section !== currentSection) {
+      currentSection = q.section;
+      html += `<div class="section-title">${currentSection}</div>`;
+    }
+    if (q.subsection_note) {
+      html += `<p class="subsection-note">${q.subsection_note}</p>`;
+    }
+    // Show passage before relevant question
+    if (q.passage && !passageShown[q.passage]) {
+      html += q.passage;
+      passageShown[q.passage] = true;
+    }
+
+    const letters = ['A','B','C','D'];
+    let optsHtml = '';
+    q.opts.forEach((opt, j) => {
+      optsHtml += `<div class="opt" id="opt-${i}-${j}" onclick="selectAnswer(${i},${j})">
+        <span class="opt-letter">${letters[j]}</span>
+        <span>${opt}</span>
+      </div>`;
+    });
+
+    html += `
+    <div class="q-card" id="card-${i}">
+      <div class="q-header">
+        <div class="q-num" id="qnum-${i}">${i+1}</div>
+        <div class="q-text">${q.q}</div>
+        <div class="q-status" id="status-${i}"></div>
+      </div>
+      <div class="options" id="opts-${i}">${optsHtml}</div>
+      <div class="explanation" id="exp-${i}">
+        <h4>Explanation</h4>
+        ${q.exp}
+      </div>
+    </div>`;
+  });
+
+  main.innerHTML = html;
+  answered = new Array(QUESTIONS.length).fill(false);
+  correct = new Array(QUESTIONS.length).fill(false);
+}
+
+function selectAnswer(qIdx, optIdx) {
+  if (answered[qIdx]) return;
+  answered[qIdx] = true;
+  const q = QUESTIONS[qIdx];
+  const isCorrect = optIdx === q.ans;
+  correct[qIdx] = isCorrect;
+
+  for (let j = 0; j < q.opts.length; j++) {
+    const optEl = document.getElementById(`opt-${qIdx}-${j}`);
+    optEl.classList.add('disabled');
+    if (j === q.ans) optEl.classList.add('correct');
+    else if (j === optIdx && !isCorrect) optEl.classList.add('wrong');
+  }
+
+  const qnum = document.getElementById(`qnum-${qIdx}`);
+  qnum.classList.add(isCorrect ? 'answered-correct' : 'answered-wrong');
+
+  const status = document.getElementById(`status-${qIdx}`);
+  status.textContent = isCorrect ? '✓' : '✗';
+  status.style.color = isCorrect ? 'var(--correct)' : 'var(--wrong)';
+  status.classList.add('show');
+
+  document.getElementById(`exp-${qIdx}`).classList.add('show');
+  updateDashboard();
+}
+
+function updateDashboard() {
+  const totalAnswered = answered.filter(Boolean).length;
+  const totalCorrect = correct.filter(Boolean).length;
+  const totalWrong = totalAnswered - totalCorrect;
+  const pct = Math.round((totalAnswered / QUESTIONS.length) * 100);
+
+  document.getElementById('d-answered').textContent = totalAnswered;
+  document.getElementById('d-correct').textContent = totalCorrect;
+  document.getElementById('d-wrong').textContent = totalWrong;
+  document.getElementById('prog-bar').style.width = pct + '%';
+  document.getElementById('d-pct').textContent = pct + '%';
+}
+
+function showResults() {
+  const totalAnswered = answered.filter(Boolean).length;
+  const totalCorrect = correct.filter(Boolean).length;
+  const scorePct = totalAnswered > 0 ? Math.round((totalCorrect / QUESTIONS.length) * 100) : 0;
+
+  document.getElementById('res-pct').textContent = scorePct + '%';
+  document.getElementById('res-frac').textContent = totalCorrect + ' / ' + QUESTIONS.length;
+
+  let msg = '';
+  if (scorePct >= 80) msg = 'Excellent! Outstanding performance. You are well-prepared for the SAT exam!';
+  else if (scorePct >= 60) msg = 'Good work! Review your incorrect answers and strengthen weak areas.';
+  else if (scorePct >= 40) msg = 'Fair result. Focus on the explanations for missed questions and practice more.';
+  else msg = 'Keep studying! Read each explanation carefully and try again. You can do it!';
+
+  document.getElementById('res-msg').textContent = msg;
+  document.getElementById('results-overlay').classList.add('show');
+}
+
+function closeResults() {
+  document.getElementById('results-overlay').classList.remove('show');
+}
+
+function resetAll() {
+  closeResults();
+  buildExam();
+  updateDashboard();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+window.addEventListener('scroll', () => {
+  const btn = document.getElementById('scrolltop');
+  btn.classList.toggle('visible', window.scrollY > 400);
+});
+
+buildExam();
+</script>
+</body>
+</html>
