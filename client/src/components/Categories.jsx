@@ -57,13 +57,13 @@ const categories = [
   {
     icon: (
       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C6.228 6.253 2 10.541 2 15.75c0 5.209 4.228 9.497 10 9.497s10-4.288 10-9.497c0-5.209-4.228-9.497-10-9.497z" />
       </svg>
     ),
-    name: 'Data Center',
-    slug: 'data-center',
-    count: 76,
-    color: 'from-green-500/20 to-green-500/5 border-green-500/20 text-green-400',
+    name: 'Ethio-Exam-Preparetion',
+    slug: 'exam-preparation',
+    count: 2,
+    color: 'from-orange-500/20 to-orange-500/5 border-orange-500/20 text-orange-400',
   },
 ];
 
@@ -83,21 +83,26 @@ export default function Categories() {
 
         {/* Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          {categories.map(({ icon, name, slug, count, color }) => (
-            <a
-              key={name}
-              href={`/projects?category=${slug}`}
-              className={`group flex flex-col items-center gap-3 p-5 rounded-2xl bg-gradient-to-b border ${color} hover:scale-105 transition-transform duration-200 cursor-pointer`}
-            >
-              <div className="opacity-80 group-hover:opacity-100 transition-opacity">
-                {icon}
-              </div>
-              <div className="text-center">
-                <div className="text-white text-sm font-semibold leading-tight">{name}</div>
-                <div className="text-gray-500 text-xs mt-1">{count} projects</div>
-              </div>
-            </a>
-          ))}
+          {categories.map(({ icon, name, slug, count, color }) => {
+            const isExamPrep = slug === 'exam-preparation';
+            const link = isExamPrep ? `/exam-preparation` : `/projects?category=${slug}`;
+
+            return (
+              <a
+                key={name}
+                href={link}
+                className={`group flex flex-col items-center gap-3 p-5 rounded-2xl bg-gradient-to-b border ${color} hover:scale-105 transition-transform duration-200 cursor-pointer`}
+              >
+                <div className="opacity-80 group-hover:opacity-100 transition-opacity">
+                  {icon}
+                </div>
+                <div className="text-center">
+                  <div className="text-white text-sm font-semibold leading-tight">{name}</div>
+                  <div className="text-gray-500 text-xs mt-1">{count} {isExamPrep ? 'exams' : 'projects'}</div>
+                </div>
+              </a>
+            );
+          })}
         </div>
       </div>
     </section>

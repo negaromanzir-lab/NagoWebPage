@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import homepagePhoto from '../../../Images/homepage photo.jpg';
 
 // ── User dropdown ──────────────────────────────────────────────────────────────
 
@@ -113,12 +114,7 @@ export default function Navbar() {
 
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18" />
-              </svg>
-            </div>
+            <img src={homepagePhoto} alt="NagoWeb Logo" className="w-8 h-8 rounded-lg object-cover" />
             <span className="text-white font-bold text-xl tracking-tight">
               Nago<span className="text-cyan-400">Web</span>
             </span>

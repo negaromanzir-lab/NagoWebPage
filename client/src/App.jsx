@@ -12,6 +12,11 @@ import ProjectsPage       from './pages/ProjectsPage';
 import ProjectDetailsPage from './pages/ProjectDetailsPage';
 import CoursesPage        from './pages/CoursesPage';
 import CourseDetailsPage  from './pages/CourseDetailsPage';
+import ExamPreparationPage from './pages/ExamPreparationPage';
+import UniversityExitExamPage from './pages/UniversityExitExamPage';
+import HighSchoolEntranceExamPage from './pages/HighSchoolEntranceExamPage';
+import StreamSubjectsPage from './pages/StreamSubjectsPage';
+import SubjectYearsPage from './pages/SubjectYearsPage';
 
 // ── User dashboard ─────────────────────────────────────────────────────────────
 import {
@@ -49,6 +54,11 @@ export default function App() {
           <Route path="/projects/:id" element={<ProjectDetailsPage />} />
           <Route path="/courses"  element={<CoursesPage />} />
           <Route path="/courses/:id" element={<CourseDetailsPage />} />
+          <Route path="/exam-preparation" element={<ExamPreparationPage />} />
+          <Route path="/exam-preparation/university-exit" element={<UniversityExitExamPage />} />
+          <Route path="/exam-preparation/highschool-entrance" element={<HighSchoolEntranceExamPage />} />
+          <Route path="/exam-preparation/highschool-entrance/:stream" element={<StreamSubjectsPage />} />
+          <Route path="/exam-preparation/highschool-entrance/:stream/:subject" element={<SubjectYearsPage />} />
 
           {/* ── User dashboard (nested) ──────────────────────────────────────── */}
           <Route

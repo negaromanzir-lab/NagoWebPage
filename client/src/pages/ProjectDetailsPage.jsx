@@ -168,7 +168,9 @@ export default function ProjectDetailsPage() {
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     e.target.style.display = 'none';
-                    e.target.nextElementSibling?.style.display = 'flex';
+                    if (e.target.nextElementSibling) {
+                      e.target.nextElementSibling.style.display = 'flex';
+                    }
                   }}
                 />
               ) : null}
