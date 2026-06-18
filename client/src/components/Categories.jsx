@@ -8,6 +8,8 @@ const categories = [
     name: 'Enterprise LAN',
     slug: 'enterprise-lan',
     count: 87,
+    countLabel: 'projects',
+    href: '/projects?category=enterprise-lan',
     color: 'from-cyan-500/20 to-cyan-500/5 border-cyan-500/20 text-cyan-400',
   },
   {
@@ -19,6 +21,8 @@ const categories = [
     name: 'Cloud Networking',
     slug: 'cloud-networking',
     count: 64,
+    countLabel: 'projects',
+    href: '/projects?category=cloud-networking',
     color: 'from-blue-500/20 to-blue-500/5 border-blue-500/20 text-blue-400',
   },
   {
@@ -30,6 +34,8 @@ const categories = [
     name: 'Security & Firewall',
     slug: 'security-firewall',
     count: 112,
+    countLabel: 'projects',
+    href: '/projects?category=security-firewall',
     color: 'from-red-500/20 to-red-500/5 border-red-500/20 text-red-400',
   },
   {
@@ -41,6 +47,8 @@ const categories = [
     name: 'Wireless & Wi-Fi',
     slug: 'wireless-wifi',
     count: 53,
+    countLabel: 'projects',
+    href: '/projects?category=wireless-wifi',
     color: 'from-purple-500/20 to-purple-500/5 border-purple-500/20 text-purple-400',
   },
   {
@@ -52,18 +60,36 @@ const categories = [
     name: 'SD-WAN',
     slug: 'sd-wan',
     count: 41,
+    countLabel: 'projects',
+    href: '/projects?category=sd-wan',
     color: 'from-yellow-500/20 to-yellow-500/5 border-yellow-500/20 text-yellow-400',
   },
   {
     icon: (
       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C6.228 6.253 2 10.541 2 15.75c0 5.209 4.228 9.497 10 9.497s10-4.288 10-9.497c0-5.209-4.228-9.497-10-9.497z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
       </svg>
     ),
     name: 'Ethio-Exam-Preparetion',
     slug: 'exam-preparation',
     count: 2,
+    countLabel: 'exams',
+    href: '/exam-preparation',
     color: 'from-orange-500/20 to-orange-500/5 border-orange-500/20 text-orange-400',
+  },
+  {
+    icon: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+      </svg>
+    ),
+    name: 'Books Library',
+    slug: 'books',
+    count: 0,
+    countLabel: 'books',
+    href: '/books',
+    color: 'from-emerald-500/20 to-emerald-500/5 border-emerald-500/20 text-emerald-400',
   },
 ];
 
@@ -82,27 +108,22 @@ export default function Categories() {
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          {categories.map(({ icon, name, slug, count, color }) => {
-            const isExamPrep = slug === 'exam-preparation';
-            const link = isExamPrep ? `/exam-preparation` : `/projects?category=${slug}`;
-
-            return (
-              <a
-                key={name}
-                href={link}
-                className={`group flex flex-col items-center gap-3 p-5 rounded-2xl bg-gradient-to-b border ${color} hover:scale-105 transition-transform duration-200 cursor-pointer`}
-              >
-                <div className="opacity-80 group-hover:opacity-100 transition-opacity">
-                  {icon}
-                </div>
-                <div className="text-center">
-                  <div className="text-white text-sm font-semibold leading-tight">{name}</div>
-                  <div className="text-gray-500 text-xs mt-1">{count} {isExamPrep ? 'exams' : 'projects'}</div>
-                </div>
-              </a>
-            );
-          })}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-4">
+          {categories.map(({ icon, name, href, count, countLabel, color }) => (
+            <a
+              key={name}
+              href={href}
+              className={`group flex flex-col items-center gap-3 p-5 rounded-2xl bg-gradient-to-b border ${color} hover:scale-105 transition-transform duration-200 cursor-pointer`}
+            >
+              <div className="opacity-80 group-hover:opacity-100 transition-opacity">
+                {icon}
+              </div>
+              <div className="text-center">
+                <div className="text-white text-sm font-semibold leading-tight">{name}</div>
+                <div className="text-gray-500 text-xs mt-1">{count} {countLabel}</div>
+              </div>
+            </a>
+          ))}
         </div>
       </div>
     </section>

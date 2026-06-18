@@ -3,6 +3,7 @@ const { body, param, query } = require('express-validator');
 const adminController          = require('../controllers/admin.controller');
 const uploadsController        = require('../controllers/uploads.controller');
 const manualPaymentsController = require('../controllers/manualPayments.controller');
+const booksController          = require('../controllers/books.controller');
 const tokenService             = require('../services/tokenService');
 const { authenticate, authorize } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
@@ -240,5 +241,48 @@ router.patch(
   validate,
   manualPaymentsController.adminRejectProof
 );
+
+// ── Books Management ───────────────────────────────────────────────────────────
+
+/**
+ * GET /api/admin/books
+ * List ALL books including drafts and deleted (admin view).
+ */
+router.get('/books', async (req, res, next) => {
+  try {
+    const db     = require('../config/db').getPool();
+    const page   = Math.max(1, parseInt(req.query.page  || '1',  10));
+    const limit  = Math.min(100, Math.max(1, parseInt(req.query.limit || '15', 10)));
+    const offset = (page - 1) * limit;
+    const { q }  = req.query;
+
+    const conditions = ['b.is_deleted = 0'];
+    const params     = [];
+    if (q) {
+      conditions.push('(b.title LIKE ? OR b.author LIKE ?)');
+      params.push(`%${q}%`, `%${q}%`);
+    }
+    const where = `WHERE ${conditions.join(' AND ')}`;
+
+    const [rows] = await db.query(
+      `SELECT b.id, b.title, b.author, b.cover_image_path, b.pdf_file_path,
+              b.file_size_bytes, b.price, b.is_free, b.is_published, b.is_featured,
+              b.download_count, b.rating, b.review_count, b.created_at,
+              c.name AS category, c.id AS category_id
+       FROM books b
+       LEFT JOIN categories c ON b.category_id = c.id
+       ${where}
+       ORDER BY b.created_at DESC
+       LIMIT ? OFFSET ?`,
+      [...params, limit, offset]
+    );
+
+    const [[{ total }]] = await db.query(
+      `SELECT COUNT(*) AS total FROM books b ${where}`, params
+    );
+
+    res.json({ success: true, data: rows, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
+  } catch (err) { next(err); }
+});
 
 module.exports = router;

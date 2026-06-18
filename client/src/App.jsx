@@ -4,20 +4,22 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // ── Public pages ───────────────────────────────────────────────────────────────
-import HomePage           from './pages/HomePage';
-import LoginPage          from './pages/LoginPage';
-import RegisterPage       from './pages/RegisterPage';
-import ManualPaymentPage  from './pages/ManualPaymentPage';
-import ProjectsPage       from './pages/ProjectsPage';
-import ProjectDetailsPage from './pages/ProjectDetailsPage';
-import CoursesPage        from './pages/CoursesPage';
-import CourseDetailsPage  from './pages/CourseDetailsPage';
-import ExamPreparationPage from './pages/ExamPreparationPage';
-import UniversityExitExamPage from './pages/UniversityExitExamPage';
-import HighSchoolEntranceExamPage from './pages/HighSchoolEntranceExamPage';
-import StreamSubjectsPage from './pages/StreamSubjectsPage';
-import SubjectYearsPage from './pages/SubjectYearsPage';
-import ExamContentPage from './pages/ExamContentPage';
+import HomePage                   from './pages/HomePage';
+import LoginPage                  from './pages/LoginPage';
+import RegisterPage                from './pages/RegisterPage';
+import ManualPaymentPage           from './pages/ManualPaymentPage';
+import ProjectsPage                from './pages/ProjectsPage';
+import ProjectDetailsPage          from './pages/ProjectDetailsPage';
+import CoursesPage                 from './pages/CoursesPage';
+import CourseDetailsPage           from './pages/CourseDetailsPage';
+import BooksPage                   from './pages/BooksPage';
+import BookDetailsPage             from './pages/BookDetailsPage';
+import ExamPreparationPage         from './pages/ExamPreparationPage';
+import UniversityExitExamPage      from './pages/UniversityExitExamPage';
+import HighSchoolEntranceExamPage  from './pages/HighSchoolEntranceExamPage';
+import StreamSubjectsPage          from './pages/StreamSubjectsPage';
+import SubjectYearsPage            from './pages/SubjectYearsPage';
+import ExamContentPage             from './pages/ExamContentPage';
 
 // ── User dashboard ─────────────────────────────────────────────────────────────
 import {
@@ -31,15 +33,16 @@ import {
 } from './pages/DashboardPage';
 
 // ── Admin ──────────────────────────────────────────────────────────────────────
-import AdminLayout          from './pages/admin/AdminLayout';
-import AdminOverview        from './pages/admin/AdminOverview';
-import AdminUsers           from './pages/admin/AdminUsers';
-import AdminProjects        from './pages/admin/AdminProjects';
-import AdminOrders          from './pages/admin/AdminOrders';
-import AdminFiles           from './pages/admin/AdminFiles';
-import AdminReviews         from './pages/admin/AdminReviews';
-import AdminUpload          from './pages/admin/AdminUpload';
-import AdminManualPayments  from './pages/admin/AdminManualPayments';
+import AdminLayout         from './pages/admin/AdminLayout';
+import AdminOverview       from './pages/admin/AdminOverview';
+import AdminUsers          from './pages/admin/AdminUsers';
+import AdminProjects       from './pages/admin/AdminProjects';
+import AdminOrders         from './pages/admin/AdminOrders';
+import AdminFiles          from './pages/admin/AdminFiles';
+import AdminReviews        from './pages/admin/AdminReviews';
+import AdminUpload         from './pages/admin/AdminUpload';
+import AdminManualPayments from './pages/admin/AdminManualPayments';
+import AdminBooks          from './pages/admin/AdminBooks';
 
 export default function App() {
   return (
@@ -47,19 +50,29 @@ export default function App() {
       <AuthProvider>
         <Routes>
           {/* ── Public ──────────────────────────────────────────────────────── */}
-          <Route path="/"         element={<HomePage />} />
-          <Route path="/login"    element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/pay"      element={<ManualPaymentPage />} />
-          <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/"             element={<HomePage />} />
+          <Route path="/login"        element={<LoginPage />} />
+          <Route path="/register"     element={<RegisterPage />} />
+          <Route path="/pay"          element={<ManualPaymentPage />} />
+
+          {/* Projects */}
+          <Route path="/projects"     element={<ProjectsPage />} />
           <Route path="/projects/:id" element={<ProjectDetailsPage />} />
-          <Route path="/courses"  element={<CoursesPage />} />
-          <Route path="/courses/:id" element={<CourseDetailsPage />} />
-          <Route path="/exam-preparation" element={<ExamPreparationPage />} />
-          <Route path="/exam-preparation/university-exit" element={<UniversityExitExamPage />} />
-          <Route path="/exam-preparation/highschool-entrance" element={<HighSchoolEntranceExamPage />} />
-          <Route path="/exam-preparation/highschool-entrance/:stream" element={<StreamSubjectsPage />} />
-          <Route path="/exam-preparation/highschool-entrance/:stream/:subject" element={<SubjectYearsPage />} />
+
+          {/* Courses */}
+          <Route path="/courses"      element={<CoursesPage />} />
+          <Route path="/courses/:id"  element={<CourseDetailsPage />} />
+
+          {/* Books */}
+          <Route path="/books"        element={<BooksPage />} />
+          <Route path="/books/:id"    element={<BookDetailsPage />} />
+
+          {/* Exam Preparation */}
+          <Route path="/exam-preparation"                                          element={<ExamPreparationPage />} />
+          <Route path="/exam-preparation/university-exit"                          element={<UniversityExitExamPage />} />
+          <Route path="/exam-preparation/highschool-entrance"                      element={<HighSchoolEntranceExamPage />} />
+          <Route path="/exam-preparation/highschool-entrance/:stream"             element={<StreamSubjectsPage />} />
+          <Route path="/exam-preparation/highschool-entrance/:stream/:subject"    element={<SubjectYearsPage />} />
           <Route path="/exam-preparation/highschool-entrance/:stream/:subject/:year" element={<ExamContentPage />} />
 
           {/* ── User dashboard (nested) ──────────────────────────────────────── */}
@@ -96,6 +109,7 @@ export default function App() {
             <Route path="reviews"         element={<AdminReviews />} />
             <Route path="upload"          element={<AdminUpload />} />
             <Route path="manual-payments" element={<AdminManualPayments />} />
+            <Route path="books"           element={<AdminBooks />} />
           </Route>
 
           {/* ── Fallback ─────────────────────────────────────────────────────── */}

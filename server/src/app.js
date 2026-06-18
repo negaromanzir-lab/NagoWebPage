@@ -11,39 +11,37 @@ const { connectDB } = require('./config/db');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 // ── Route imports ──────────────────────────────────────────────────────────────
-const authRoutes = require('./routes/auth.routes');
-const projectsRoutes = require('./routes/projects.routes');
-const coursesRoutes = require('./routes/courses.routes');
-const paymentsRoutes = require('./routes/payments.routes');
+const authRoutes      = require('./routes/auth.routes');
+const projectsRoutes  = require('./routes/projects.routes');
+const coursesRoutes   = require('./routes/courses.routes');
+const booksRoutes     = require('./routes/books.routes');
+const paymentsRoutes  = require('./routes/payments.routes');
 const downloadsRoutes = require('./routes/downloads.routes');
-const usersRoutes = require('./routes/users.routes');
-const adminRoutes = require('./routes/admin.routes');
+const usersRoutes     = require('./routes/users.routes');
+const adminRoutes     = require('./routes/admin.routes');
 
-const app = express();
+const app  = express();
 const PORT = process.env.PORT || 5000;
 
 // ── Security headers ───────────────────────────────────────────────────────────
 app.use(
   helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' }, // allow serving uploads
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
   })
 );
 
 // ── CORS ───────────────────────────────────────────────────────────────────────
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    origin:         process.env.CLIENT_URL || 'http://localhost:5173',
+    credentials:    true,
+    methods:        ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
 
-// ── Stripe webhook MUST use raw body — register BEFORE express.json() ──────────
-app.use(
-  '/api/payments/webhook',
-  express.raw({ type: 'application/json' })
-);
+// ── Stripe webhook — raw body BEFORE express.json() ───────────────────────────
+app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
 
 // ── Body parsers ───────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
@@ -58,15 +56,15 @@ if (process.env.NODE_ENV !== 'test') {
 app.use(
   '/api',
   rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 300,
+    windowMs:        15 * 60 * 1000,
+    max:             300,
     standardHeaders: true,
-    legacyHeaders: false,
-    message: { success: false, message: 'Too many requests, please slow down' },
+    legacyHeaders:   false,
+    message:         { success: false, message: 'Too many requests, please slow down' },
   })
 );
 
-// ── Static file serving (uploaded files) ──────────────────────────────────────
+// ── Static file serving ────────────────────────────────────────────────────────
 const UPLOAD_BASE = path.resolve(process.env.UPLOAD_DIR || 'uploads');
 
 // User avatars — public
@@ -81,36 +79,33 @@ app.use('/uploads/courses',
 app.use('/uploads/projects/previews',
   express.static(path.join(UPLOAD_BASE, 'projects', 'previews')));
 
-// Topology diagrams — public (visual assets, not the downloadable project)
+// Topology diagrams — public
 app.use('/uploads/projects/diagrams',
   express.static(path.join(UPLOAD_BASE, 'projects', 'diagrams')));
-
-// ⚠️  Source files, documentation, and other project files are NOT served
-//     statically — they are only accessible via the authenticated
-//     /api/downloads route which verifies purchase ownership.
-//
-// ⚠️  Payment proof screenshots are NOT served statically — they are only
-//     accessible via the authenticated /api/admin/manual-payments/:id/screenshot
-//     route which verifies admin role.
 
 // ── Health check ───────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
   res.json({
-    success: true,
-    status: 'ok',
+    success:     true,
+    status:      'ok',
     environment: process.env.NODE_ENV,
-    timestamp: new Date().toISOString(),
+    timestamp:   new Date().toISOString(),
   });
 });
 
+// Static — books covers (public)
+app.use('/uploads/books/covers',
+  express.static(path.join(UPLOAD_BASE, 'books', 'covers')));
+
 // ── API routes ─────────────────────────────────────────────────────────────────
-app.use('/api/auth', authRoutes);
-app.use('/api/projects', projectsRoutes);
-app.use('/api/courses', coursesRoutes);
-app.use('/api/payments', paymentsRoutes);
+app.use('/api/auth',      authRoutes);
+app.use('/api/projects',  projectsRoutes);
+app.use('/api/courses',   coursesRoutes);
+app.use('/api/books',     booksRoutes);
+app.use('/api/payments',  paymentsRoutes);
 app.use('/api/downloads', downloadsRoutes);
-app.use('/api/users', usersRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/users',     usersRoutes);
+app.use('/api/admin',     adminRoutes);
 
 // ── 404 & error handlers ───────────────────────────────────────────────────────
 app.use(notFound);
@@ -131,4 +126,4 @@ async function start() {
 
 start();
 
-module.exports = app; // exported for testing
+module.exports = app;
