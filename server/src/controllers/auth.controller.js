@@ -32,31 +32,28 @@ async function register(req, res, next) {
     const { name, email, password } = req.body;
     const db = getPool();
 
-    // Check for existing email
-    const [existing] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
+    const [existing] = await db.query('SELECT id FROM users WHERE email = $1', [email]);
     if (existing.length) {
       return res.status(409).json({ success: false, message: 'Email already registered' });
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
     const [result] = await db.query(
-      'INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)',
+      'INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id',
       [name, email, passwordHash, 'buyer']
     );
 
-    const userId = result.insertId;
+    const userId = result[0].id;
     const user = { id: userId, email, role: 'buyer' };
 
     const accessToken = signAccessToken(user);
     const refreshToken = signRefreshToken(userId);
 
-    // Persist refresh token
     await db.query(
-      'INSERT INTO refresh_tokens (id, user_id, token, expires_at) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 30 DAY))',
+      'INSERT INTO refresh_tokens (id, user_id, token, expires_at) VALUES ($1, $2, $3, NOW() + INTERVAL \'30 days\')',
       [uuidv4(), userId, refreshToken]
     );
 
-    // Send welcome email (non-blocking)
     emailService.sendWelcome({ name, email }).catch(() => {});
 
     res.status(201).json({
@@ -82,7 +79,7 @@ async function login(req, res, next) {
     const db = getPool();
 
     const [rows] = await db.query(
-      'SELECT id, name, email, password_hash, role, is_active FROM users WHERE email = ?',
+      'SELECT id, name, email, password_hash, role, is_active FROM users WHERE email = $1',
       [email]
     );
 
@@ -101,14 +98,13 @@ async function login(req, res, next) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
-    // Update last login timestamp
-    await db.query('UPDATE users SET last_login_at = NOW() WHERE id = ?', [user.id]);
+    await db.query('UPDATE users SET last_login_at = NOW() WHERE id = $1', [user.id]);
 
     const accessToken = signAccessToken(user);
     const refreshToken = signRefreshToken(user.id);
 
     await db.query(
-      'INSERT INTO refresh_tokens (id, user_id, token, expires_at) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 30 DAY))',
+      'INSERT INTO refresh_tokens (id, user_id, token, expires_at) VALUES ($1, $2, $3, NOW() + INTERVAL \'30 days\')',
       [uuidv4(), user.id, refreshToken]
     );
 
@@ -145,7 +141,7 @@ async function refresh(req, res, next) {
 
     const db = getPool();
     const [rows] = await db.query(
-      'SELECT id FROM refresh_tokens WHERE token = ? AND user_id = ? AND expires_at > NOW() AND revoked_at IS NULL',
+      'SELECT id FROM refresh_tokens WHERE token = $1 AND user_id = $2 AND expires_at > NOW() AND revoked_at IS NULL',
       [refreshToken, decoded.id]
     );
 
@@ -154,7 +150,7 @@ async function refresh(req, res, next) {
     }
 
     const [userRows] = await db.query(
-      'SELECT id, email, role FROM users WHERE id = ? AND is_active = 1',
+      'SELECT id, email, role FROM users WHERE id = $1 AND is_active = TRUE',
       [decoded.id]
     );
 
@@ -183,13 +179,12 @@ async function logout(req, res, next) {
 
     if (refreshToken) {
       await db.query(
-        'UPDATE refresh_tokens SET revoked_at = NOW() WHERE token = ? AND user_id = ?',
+        'UPDATE refresh_tokens SET revoked_at = NOW() WHERE token = $1 AND user_id = $2',
         [refreshToken, req.user.id]
       );
     } else {
-      // Revoke all tokens for this user
       await db.query(
-        'UPDATE refresh_tokens SET revoked_at = NOW() WHERE user_id = ? AND revoked_at IS NULL',
+        'UPDATE refresh_tokens SET revoked_at = NOW() WHERE user_id = $1 AND revoked_at IS NULL',
         [req.user.id]
       );
     }
@@ -208,7 +203,7 @@ async function me(req, res, next) {
     const db = getPool();
     const [rows] = await db.query(
       `SELECT id, name, email, role, bio, website, avatar_url, created_at, last_login_at
-       FROM users WHERE id = ?`,
+       FROM users WHERE id = $1`,
       [req.user.id]
     );
 
@@ -230,7 +225,7 @@ async function changePassword(req, res, next) {
     const { currentPassword, newPassword } = req.body;
     const db = getPool();
 
-    const [rows] = await db.query('SELECT password_hash FROM users WHERE id = ?', [req.user.id]);
+    const [rows] = await db.query('SELECT password_hash FROM users WHERE id = $1', [req.user.id]);
     if (!rows.length) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
@@ -241,16 +236,14 @@ async function changePassword(req, res, next) {
     }
 
     const newHash = await bcrypt.hash(newPassword, 12);
-    await db.query('UPDATE users SET password_hash = ? WHERE id = ?', [newHash, req.user.id]);
+    await db.query('UPDATE users SET password_hash = $1 WHERE id = $2', [newHash, req.user.id]);
 
-    // Revoke all refresh tokens to force re-login on other devices
     await db.query(
-      'UPDATE refresh_tokens SET revoked_at = NOW() WHERE user_id = ? AND revoked_at IS NULL',
+      'UPDATE refresh_tokens SET revoked_at = NOW() WHERE user_id = $1 AND revoked_at IS NULL',
       [req.user.id]
     );
 
-    // Send security notification email (non-blocking)
-    const [userRows] = await db.query('SELECT name, email FROM users WHERE id = ?', [req.user.id]);
+    const [userRows] = await db.query('SELECT name, email FROM users WHERE id = $1', [req.user.id]);
     if (userRows.length) {
       emailService.sendPasswordChanged({ name: userRows[0].name, email: userRows[0].email }).catch(() => {});
     }

@@ -15,10 +15,9 @@ async function authenticate(req, res, next) {
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Confirm user still exists and is active
     const db = getPool();
     const [rows] = await db.query(
-      'SELECT id, email, role, is_active FROM users WHERE id = ?',
+      'SELECT id, email, role, is_active FROM users WHERE id = $1',
       [decoded.id]
     );
 
@@ -41,7 +40,6 @@ async function authenticate(req, res, next) {
 
 /**
  * Role-based access control middleware factory.
- * Usage: authorize('admin') or authorize('admin', 'seller')
  */
 function authorize(...roles) {
   return (req, res, next) => {
@@ -70,7 +68,7 @@ async function optionalAuth(req, res, next) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const db = getPool();
       const [rows] = await db.query(
-        'SELECT id, email, role, is_active FROM users WHERE id = ?',
+        'SELECT id, email, role, is_active FROM users WHERE id = $1',
         [decoded.id]
       );
       if (rows.length && rows[0].is_active) {

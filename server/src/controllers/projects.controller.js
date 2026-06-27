@@ -2,13 +2,6 @@ const { getPool } = require('../config/db');
 const path = require('path');
 const fs = require('fs');
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
-function buildFileUrl(req, filePath) {
-  if (!filePath) return null;
-  return `${req.protocol}://${req.get('host')}/uploads/${filePath}`;
-}
-
 // ── Controllers ────────────────────────────────────────────────────────────────
 
 /**
@@ -21,46 +14,36 @@ async function list(req, res, next) {
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit || '12', 10)));
     const offset = (page - 1) * limit;
 
-    const {
-      category,
-      vendor,
-      topology_type,
-      difficulty,
-      price_min,
-      price_max,
-      rating_min,
-      is_featured,
-      sort = 'newest',
-      q,
-      tags,
-    } = req.query;
+    const { category, vendor, topology_type, difficulty,
+            price_min, price_max, rating_min, is_featured,
+            sort = 'newest', q, tags } = req.query;
 
-    const conditions = ['p.is_deleted = 0', 'p.is_published = 1'];
+    const conditions = ['p.is_deleted = FALSE', 'p.is_published = TRUE'];
     const params = [];
+    let   pi    = 1; // parameter index
 
-    if (category)     { conditions.push('c.slug = ?');           params.push(category); }
-    if (vendor)       { conditions.push('p.vendor = ?');         params.push(vendor); }
-    if (topology_type){ conditions.push('p.topology_type = ?');  params.push(topology_type); }
-    if (difficulty)   { conditions.push('p.difficulty = ?');     params.push(difficulty); }
-    if (price_min !== undefined) { conditions.push('p.price >= ?'); params.push(parseFloat(price_min)); }
-    if (price_max !== undefined) { conditions.push('p.price <= ?'); params.push(parseFloat(price_max)); }
-    if (rating_min !== undefined) { conditions.push('p.avg_rating >= ?'); params.push(parseFloat(rating_min)); }
-    if (is_featured === '1' || is_featured === 'true') { conditions.push('p.is_featured = 1'); }
+    if (category)     { conditions.push(`c.slug = $${pi++}`);           params.push(category); }
+    if (vendor)       { conditions.push(`p.vendor = $${pi++}`);         params.push(vendor); }
+    if (topology_type){ conditions.push(`p.topology_type = $${pi++}`);  params.push(topology_type); }
+    if (difficulty)   { conditions.push(`p.difficulty = $${pi++}`);     params.push(difficulty); }
+    if (price_min !== undefined) { conditions.push(`p.price >= $${pi++}`); params.push(parseFloat(price_min)); }
+    if (price_max !== undefined) { conditions.push(`p.price <= $${pi++}`); params.push(parseFloat(price_max)); }
+    if (rating_min !== undefined) { conditions.push(`p.avg_rating >= $${pi++}`); params.push(parseFloat(rating_min)); }
+    if (is_featured === '1' || is_featured === 'true') { conditions.push('p.is_featured = TRUE'); }
 
-    // Tag filter — supports comma-separated list or repeated query params
+    // Tag filter
     const tagList = tags
       ? (Array.isArray(tags) ? tags : tags.split(',')).map((t) => t.trim()).filter(Boolean)
       : [];
     if (tagList.length) {
-      const tagPlaceholders = tagList.map(() => '?').join(',');
-      conditions.push(`EXISTS (SELECT 1 FROM project_tags pt WHERE pt.project_id = p.id AND pt.tag IN (${tagPlaceholders}))`);
-      params.push(...tagList);
+      conditions.push(`EXISTS (SELECT 1 FROM project_tags pt WHERE pt.project_id = p.id AND pt.tag = ANY($${pi++}))`);
+      params.push(tagList);
     }
 
     if (q) {
-      conditions.push('(p.title LIKE ? OR p.description LIKE ? OR p.vendor LIKE ? OR p.short_description LIKE ?)');
-      const like = `%${q.trim()}%`;
-      params.push(like, like, like, like);
+      conditions.push(`(p.title ILIKE $${pi} OR p.description ILIKE $${pi} OR p.vendor ILIKE $${pi} OR p.short_description ILIKE $${pi})`);
+      params.push(`%${q.trim()}%`);
+      pi++;
     }
 
     const orderMap = {
@@ -82,25 +65,27 @@ async function list(req, res, next) {
               p.created_at,
               c.name AS category, c.slug AS category_slug,
               u.name AS seller_name,
-              GROUP_CONCAT(DISTINCT pt.tag ORDER BY pt.tag SEPARATOR ',') AS tags
+              STRING_AGG(DISTINCT pt.tag, ',') AS tags
        FROM projects p
-       LEFT JOIN categories c ON p.category_id = c.id
-       LEFT JOIN users      u ON p.seller_id   = u.id
+       LEFT JOIN categories c  ON p.category_id = c.id
+       LEFT JOIN users      u  ON p.seller_id   = u.id
        LEFT JOIN project_tags pt ON pt.project_id = p.id
        ${where}
-       GROUP BY p.id
+       GROUP BY p.id, c.name, c.slug, u.name
        ORDER BY ${orderBy}
-       LIMIT ? OFFSET ?`,
+       LIMIT $${pi++} OFFSET $${pi++}`,
       [...params, limit, offset]
     );
 
-    const [[{ total }]] = await db.query(
+    const [countRows] = await db.query(
       `SELECT COUNT(DISTINCT p.id) AS total FROM projects p
-       LEFT JOIN categories c ON p.category_id = c.id
+       LEFT JOIN categories c  ON p.category_id = c.id
        LEFT JOIN project_tags pt ON pt.project_id = p.id
        ${where}`,
       params
     );
+
+    const total = parseInt(countRows[0].total, 10);
 
     res.json({
       success: true,
@@ -114,8 +99,6 @@ async function list(req, res, next) {
 
 /**
  * GET /api/projects/filter-meta
- * Returns all distinct filter values for the search UI:
- * categories, vendors, topology types, difficulty levels, price range.
  */
 async function getFilterMeta(req, res, next) {
   try {
@@ -126,39 +109,40 @@ async function getFilterMeta(req, res, next) {
               COUNT(p.id) AS project_count
        FROM categories c
        LEFT JOIN projects p ON p.category_id = c.id
-         AND p.is_deleted = 0 AND p.is_published = 1
+         AND p.is_deleted = FALSE AND p.is_published = TRUE
        GROUP BY c.id
-       HAVING project_count > 0
+       HAVING COUNT(p.id) > 0
        ORDER BY c.sort_order ASC, c.name ASC`
     );
 
     const [vendors] = await db.query(
       `SELECT vendor, COUNT(*) AS count
        FROM projects
-       WHERE is_deleted = 0 AND is_published = 1
+       WHERE is_deleted = FALSE AND is_published = TRUE
        GROUP BY vendor
        ORDER BY count DESC`
     );
 
-    const [[priceRange]] = await db.query(
+    const [priceRows] = await db.query(
       `SELECT MIN(price) AS min_price, MAX(price) AS max_price
-       FROM projects WHERE is_deleted = 0 AND is_published = 1`
+       FROM projects WHERE is_deleted = FALSE AND is_published = TRUE`
     );
+    const priceRange = priceRows[0];
 
-    const [[counts]] = await db.query(
+    const [countRows] = await db.query(
       `SELECT
          COUNT(*) AS total,
-         SUM(is_featured = 1) AS featured,
-         SUM(price = 0) AS free
-       FROM projects WHERE is_deleted = 0 AND is_published = 1`
+         SUM(CASE WHEN is_featured = TRUE THEN 1 ELSE 0 END) AS featured,
+         SUM(CASE WHEN price = 0 THEN 1 ELSE 0 END) AS free
+       FROM projects WHERE is_deleted = FALSE AND is_published = TRUE`
     );
+    const counts = countRows[0];
 
-    // Top tags
     const [topTags] = await db.query(
       `SELECT pt.tag, COUNT(*) AS count
        FROM project_tags pt
        JOIN projects p ON pt.project_id = p.id
-       WHERE p.is_deleted = 0 AND p.is_published = 1
+       WHERE p.is_deleted = FALSE AND p.is_published = TRUE
        GROUP BY pt.tag
        ORDER BY count DESC
        LIMIT 20`
@@ -194,7 +178,7 @@ async function getCategories(req, res, next) {
       `SELECT c.id, c.name, c.slug, c.icon, c.color,
               COUNT(p.id) AS project_count
        FROM categories c
-       LEFT JOIN projects p ON p.category_id = c.id AND p.is_deleted = 0 AND p.is_published = 1
+       LEFT JOIN projects p ON p.category_id = c.id AND p.is_deleted = FALSE AND p.is_published = TRUE
        GROUP BY c.id
        ORDER BY c.sort_order ASC, c.name ASC`
     );
@@ -223,11 +207,11 @@ async function search(req, res, next) {
               c.name AS category
        FROM projects p
        LEFT JOIN categories c ON p.category_id = c.id
-       WHERE p.is_deleted = 0 AND p.is_published = 1
-         AND (p.title LIKE ? OR p.description LIKE ? OR p.vendor LIKE ? OR c.name LIKE ?)
+       WHERE p.is_deleted = FALSE AND p.is_published = TRUE
+         AND (p.title ILIKE $1 OR p.description ILIKE $1 OR p.vendor ILIKE $1 OR c.name ILIKE $1)
        ORDER BY p.avg_rating DESC
        LIMIT 20`,
-      [like, like, like, like]
+      [like]
     );
 
     res.json({ success: true, data: rows });
@@ -248,7 +232,7 @@ async function getOne(req, res, next) {
        FROM projects p
        LEFT JOIN categories c ON p.category_id = c.id
        LEFT JOIN users u ON p.seller_id = u.id
-       WHERE p.id = ? AND p.is_deleted = 0`,
+       WHERE p.id = $1 AND p.is_deleted = FALSE`,
       [req.params.id]
     );
 
@@ -258,33 +242,29 @@ async function getOne(req, res, next) {
 
     const project = rows[0];
 
-    // Fetch reviews
     const [reviews] = await db.query(
       `SELECT r.rating, r.comment, r.created_at, u.name AS reviewer_name, u.avatar_url AS reviewer_avatar
        FROM reviews r
        JOIN users u ON r.user_id = u.id
-       WHERE r.project_id = ?
+       WHERE r.project_id = $1
        ORDER BY r.created_at DESC
        LIMIT 10`,
       [project.id]
     );
 
-    // Check if the authenticated user has purchased this project
     let hasPurchased = false;
     if (req.user) {
       const [purchase] = await db.query(
         `SELECT id FROM order_items oi
          JOIN orders o ON oi.order_id = o.id
-         WHERE o.user_id = ? AND oi.project_id = ? AND o.status = 'completed'`,
+         WHERE o.user_id = $1 AND oi.project_id = $2 AND o.status = 'completed'`,
         [req.user.id, project.id]
       );
       hasPurchased = purchase.length > 0;
     }
 
-    // Increment view count
-    await db.query('UPDATE projects SET view_count = view_count + 1 WHERE id = ?', [project.id]);
+    await db.query('UPDATE projects SET view_count = view_count + 1 WHERE id = $1', [project.id]);
 
-    // Strip the file path from the response unless the user has purchased
     if (!hasPurchased) {
       delete project.project_file_path;
     }
@@ -307,26 +287,28 @@ async function create(req, res, next) {
     } = req.body;
 
     const previewImagePath = req.files?.preview_image?.[0]?.filename || null;
-    const projectFilePath = req.files?.project_file?.[0]?.filename || null;
+    const projectFilePath  = req.files?.project_file?.[0]?.filename  || null;
 
     const [result] = await db.query(
       `INSERT INTO projects
          (title, description, category_id, seller_id, vendor, price,
           topology_type, difficulty, preview_image_path, project_file_path, is_published)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-      [
-        title, description, category_id, req.user.id, vendor,
-        parseFloat(price), topology_type, difficulty,
-        previewImagePath, projectFilePath,
-      ]
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, TRUE)
+       RETURNING id`,
+      [title, description, category_id, req.user.id, vendor,
+       parseFloat(price), topology_type, difficulty,
+       previewImagePath, projectFilePath]
     );
 
-    const projectId = result.insertId;
+    const projectId = result[0].id;
 
-    // Insert tags
     if (tags.length) {
-      const tagValues = tags.map((tag) => [projectId, tag.trim()]);
-      await db.query('INSERT INTO project_tags (project_id, tag) VALUES ?', [tagValues]);
+      for (const tag of tags) {
+        await db.query(
+          'INSERT INTO project_tags (project_id, tag) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+          [projectId, tag.trim()]
+        );
+      }
     }
 
     res.status(201).json({
@@ -347,9 +329,8 @@ async function update(req, res, next) {
     const db = getPool();
     const projectId = parseInt(req.params.id, 10);
 
-    // Verify ownership (admins can edit any project)
     const [rows] = await db.query(
-      'SELECT seller_id FROM projects WHERE id = ? AND is_deleted = 0',
+      'SELECT seller_id FROM projects WHERE id = $1 AND is_deleted = FALSE',
       [projectId]
     );
 
@@ -362,26 +343,24 @@ async function update(req, res, next) {
     }
 
     const fields = {};
-    const allowed = ['title', 'description', 'category_id', 'vendor', 'price', 'topology_type', 'difficulty'];
-    allowed.forEach((key) => {
-      if (req.body[key] !== undefined) fields[key] = req.body[key];
-    });
+    const allowed = ['title','description','category_id','vendor','price','topology_type','difficulty'];
+    allowed.forEach((key) => { if (req.body[key] !== undefined) fields[key] = req.body[key]; });
 
-    if (req.files?.preview_image?.[0]) {
-      fields.preview_image_path = req.files.preview_image[0].filename;
-    }
-    if (req.files?.project_file?.[0]) {
-      fields.project_file_path = req.files.project_file[0].filename;
-    }
+    if (req.files?.preview_image?.[0]) fields.preview_image_path = req.files.preview_image[0].filename;
+    if (req.files?.project_file?.[0])  fields.project_file_path  = req.files.project_file[0].filename;
 
     if (!Object.keys(fields).length) {
       return res.status(400).json({ success: false, message: 'No fields to update' });
     }
 
-    const setClauses = Object.keys(fields).map((k) => `${k} = ?`).join(', ');
-    const values = [...Object.values(fields), projectId];
+    const keys   = Object.keys(fields);
+    const values = Object.values(fields);
+    const setClauses = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
 
-    await db.query(`UPDATE projects SET ${setClauses}, updated_at = NOW() WHERE id = ?`, values);
+    await db.query(
+      `UPDATE projects SET ${setClauses}, updated_at = NOW() WHERE id = $${keys.length + 1}`,
+      [...values, projectId]
+    );
 
     res.json({ success: true, message: 'Project updated successfully' });
   } catch (err) {
@@ -398,7 +377,7 @@ async function remove(req, res, next) {
     const projectId = parseInt(req.params.id, 10);
 
     const [rows] = await db.query(
-      'SELECT seller_id FROM projects WHERE id = ? AND is_deleted = 0',
+      'SELECT seller_id FROM projects WHERE id = $1 AND is_deleted = FALSE',
       [projectId]
     );
 
@@ -410,7 +389,7 @@ async function remove(req, res, next) {
       return res.status(403).json({ success: false, message: 'Not authorized to delete this project' });
     }
 
-    await db.query('UPDATE projects SET is_deleted = 1, updated_at = NOW() WHERE id = ?', [projectId]);
+    await db.query('UPDATE projects SET is_deleted = TRUE, updated_at = NOW() WHERE id = $1', [projectId]);
 
     res.json({ success: true, message: 'Project deleted successfully' });
   } catch (err) {
@@ -427,11 +406,10 @@ async function addReview(req, res, next) {
     const projectId = parseInt(req.params.id, 10);
     const { rating, comment } = req.body;
 
-    // Verify the user has purchased this project
     const [purchase] = await db.query(
       `SELECT oi.id FROM order_items oi
        JOIN orders o ON oi.order_id = o.id
-       WHERE o.user_id = ? AND oi.project_id = ? AND o.status = 'completed'`,
+       WHERE o.user_id = $1 AND oi.project_id = $2 AND o.status = 'completed'`,
       [req.user.id, projectId]
     );
 
@@ -442,9 +420,8 @@ async function addReview(req, res, next) {
       });
     }
 
-    // Prevent duplicate reviews
     const [existing] = await db.query(
-      'SELECT id FROM reviews WHERE user_id = ? AND project_id = ?',
+      'SELECT id FROM reviews WHERE user_id = $1 AND project_id = $2',
       [req.user.id, projectId]
     );
 
@@ -453,16 +430,15 @@ async function addReview(req, res, next) {
     }
 
     await db.query(
-      'INSERT INTO reviews (user_id, project_id, rating, comment) VALUES (?, ?, ?, ?)',
+      'INSERT INTO reviews (user_id, project_id, rating, comment) VALUES ($1, $2, $3, $4)',
       [req.user.id, projectId, rating, comment || null]
     );
 
-    // Recalculate average rating
     await db.query(
-      `UPDATE projects p
-       SET avg_rating = (SELECT AVG(rating) FROM reviews WHERE project_id = p.id),
-           review_count = (SELECT COUNT(*) FROM reviews WHERE project_id = p.id)
-       WHERE p.id = ?`,
+      `UPDATE projects
+       SET avg_rating   = (SELECT AVG(rating) FROM reviews WHERE project_id = $1),
+           review_count = (SELECT COUNT(*) FROM reviews WHERE project_id = $1)
+       WHERE id = $1`,
       [projectId]
     );
 

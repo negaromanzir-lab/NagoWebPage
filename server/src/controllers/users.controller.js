@@ -1,5 +1,4 @@
 const { getPool } = require('../config/db');
-const path = require('path');
 
 /**
  * GET /api/users/profile
@@ -9,7 +8,7 @@ async function getProfile(req, res, next) {
     const db = getPool();
     const [rows] = await db.query(
       `SELECT id, name, email, role, bio, website, avatar_url, created_at, last_login_at
-       FROM users WHERE id = ?`,
+       FROM users WHERE id = $1`,
       [req.user.id]
     );
 
@@ -17,15 +16,15 @@ async function getProfile(req, res, next) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    // Fetch purchase stats
-    const [[stats]] = await db.query(
+    const [statsRows] = await db.query(
       `SELECT COUNT(DISTINCT o.id) AS total_orders,
               COUNT(DISTINCT oi.project_id) AS total_purchases
        FROM orders o
        LEFT JOIN order_items oi ON oi.order_id = o.id
-       WHERE o.user_id = ? AND o.status = 'completed'`,
+       WHERE o.user_id = $1 AND o.status = 'completed'`,
       [req.user.id]
     );
+    const stats = statsRows[0];
 
     res.json({ success: true, data: { ...rows[0], stats } });
   } catch (err) {
@@ -42,18 +41,21 @@ async function updateProfile(req, res, next) {
     const { name, bio, website } = req.body;
 
     const fields = {};
-    if (name !== undefined) fields.name = name;
-    if (bio !== undefined) fields.bio = bio;
+    if (name    !== undefined) fields.name    = name;
+    if (bio     !== undefined) fields.bio     = bio;
     if (website !== undefined) fields.website = website;
 
     if (!Object.keys(fields).length) {
       return res.status(400).json({ success: false, message: 'No fields to update' });
     }
 
-    const setClauses = Object.keys(fields).map((k) => `${k} = ?`).join(', ');
+    const keys   = Object.keys(fields);
+    const values = Object.values(fields);
+    const setClauses = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
+
     await db.query(
-      `UPDATE users SET ${setClauses}, updated_at = NOW() WHERE id = ?`,
-      [...Object.values(fields), req.user.id]
+      `UPDATE users SET ${setClauses}, updated_at = NOW() WHERE id = $${keys.length + 1}`,
+      [...values, req.user.id]
     );
 
     res.json({ success: true, message: 'Profile updated successfully' });
@@ -74,9 +76,8 @@ async function uploadAvatar(req, res, next) {
     const db = getPool();
     const avatarUrl = `/uploads/avatars/${req.file.filename}`;
 
-    await db.query('UPDATE users SET avatar_url = ?, updated_at = NOW() WHERE id = ?', [
-      avatarUrl,
-      req.user.id,
+    await db.query('UPDATE users SET avatar_url = $1, updated_at = NOW() WHERE id = $2', [
+      avatarUrl, req.user.id,
     ]);
 
     res.json({ success: true, message: 'Avatar updated', data: { avatarUrl } });
@@ -97,7 +98,7 @@ async function getWishlist(req, res, next) {
        FROM wishlists w
        JOIN projects p ON w.project_id = p.id
        LEFT JOIN categories c ON p.category_id = c.id
-       WHERE w.user_id = ? AND p.is_deleted = 0
+       WHERE w.user_id = $1 AND p.is_deleted = FALSE
        ORDER BY w.created_at DESC`,
       [req.user.id]
     );
@@ -117,7 +118,7 @@ async function addToWishlist(req, res, next) {
     const projectId = parseInt(req.params.projectId, 10);
 
     const [project] = await db.query(
-      'SELECT id FROM projects WHERE id = ? AND is_deleted = 0',
+      'SELECT id FROM projects WHERE id = $1 AND is_deleted = FALSE',
       [projectId]
     );
 
@@ -126,7 +127,7 @@ async function addToWishlist(req, res, next) {
     }
 
     await db.query(
-      'INSERT IGNORE INTO wishlists (user_id, project_id) VALUES (?, ?)',
+      'INSERT INTO wishlists (user_id, project_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
       [req.user.id, projectId]
     );
 
@@ -143,7 +144,7 @@ async function removeFromWishlist(req, res, next) {
   try {
     const db = getPool();
     await db.query(
-      'DELETE FROM wishlists WHERE user_id = ? AND project_id = ?',
+      'DELETE FROM wishlists WHERE user_id = $1 AND project_id = $2',
       [req.user.id, parseInt(req.params.projectId, 10)]
     );
 
@@ -159,19 +160,20 @@ async function removeFromWishlist(req, res, next) {
 async function listAll(req, res, next) {
   try {
     const db = getPool();
-    const page = Math.max(1, parseInt(req.query.page || '1', 10));
-    const limit = Math.min(100, parseInt(req.query.limit || '20', 10));
+    const page   = Math.max(1, parseInt(req.query.page  || '1',  10));
+    const limit  = Math.min(100, parseInt(req.query.limit || '20', 10));
     const offset = (page - 1) * limit;
 
     const [rows] = await db.query(
       `SELECT id, name, email, role, is_active, created_at, last_login_at
        FROM users
        ORDER BY created_at DESC
-       LIMIT ? OFFSET ?`,
+       LIMIT $1 OFFSET $2`,
       [limit, offset]
     );
 
-    const [[{ total }]] = await db.query('SELECT COUNT(*) AS total FROM users');
+    const [countRows] = await db.query('SELECT COUNT(*) AS total FROM users');
+    const total = parseInt(countRows[0].total, 10);
 
     res.json({
       success: true,
@@ -195,7 +197,7 @@ async function changeRole(req, res, next) {
       return res.status(400).json({ success: false, message: 'Cannot change your own role' });
     }
 
-    await db.query('UPDATE users SET role = ? WHERE id = ?', [req.body.role, userId]);
+    await db.query('UPDATE users SET role = $1 WHERE id = $2', [req.body.role, userId]);
 
     res.json({ success: true, message: 'Role updated successfully' });
   } catch (err) {

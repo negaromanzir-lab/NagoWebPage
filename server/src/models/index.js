@@ -1,7 +1,7 @@
 /**
  * models/index.js
  *
- * This project uses raw SQL queries via mysql2 (no ORM).
+ * This project uses raw SQL queries via pg (node-postgres) — no ORM.
  * Model-level logic (query helpers, data-shaping) lives here.
  *
  * Add per-entity model files as the project grows, e.g.:

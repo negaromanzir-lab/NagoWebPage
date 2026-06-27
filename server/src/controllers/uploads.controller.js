@@ -1,16 +1,7 @@
-/**
- * uploads.controller.js
- *
- * Handles all admin file upload operations against the project_files table.
- * Supports: source ZIPs, topology images, PDFs, implementation guides.
- */
-
 const path = require('path');
 const fs   = require('fs');
 const { getPool } = require('../config/db');
 const { UPLOAD_DIR, subDirForType, inferFileType } = require('../middleware/upload');
-
-// ── Helpers ────────────────────────────────────────────────────────────────────
 
 function buildRelativePath(fileType, filename) {
   return `${subDirForType(fileType)}/${filename}`;
@@ -23,25 +14,14 @@ function safeUnlink(relativePath) {
 }
 
 function fmtFileType(mimetype, bodyFileType) {
-  if (bodyFileType && ['source', 'preview', 'diagram', 'documentation', 'other'].includes(bodyFileType)) {
+  if (bodyFileType && ['source','preview','diagram','documentation','other'].includes(bodyFileType)) {
     return bodyFileType;
   }
   return inferFileType(mimetype);
 }
 
-// ── Controllers ────────────────────────────────────────────────────────────────
+// ── POST /api/admin/uploads/:projectId ────────────────────────────────────────
 
-/**
- * POST /api/admin/uploads/:projectId
- *
- * Upload a single file and attach it to a project.
- * Body (multipart/form-data):
- *   file        — the file itself
- *   file_type   — 'source' | 'preview' | 'diagram' | 'documentation' | 'other'
- *   version     — optional version string (default '1.0')
- *   is_primary  — '1' | '0' — whether this is the main downloadable file
- *   description — optional description
- */
 async function uploadSingle(req, res, next) {
   try {
     if (!req.file) {
@@ -51,9 +31,8 @@ async function uploadSingle(req, res, next) {
     const db        = getPool();
     const projectId = parseInt(req.params.projectId, 10);
 
-    // Verify project exists
     const [projects] = await db.query(
-      'SELECT id, title FROM projects WHERE id = ? AND is_deleted = 0',
+      'SELECT id, title FROM projects WHERE id = $1 AND is_deleted = FALSE',
       [projectId]
     );
     if (!projects.length) {
@@ -61,15 +40,14 @@ async function uploadSingle(req, res, next) {
       return res.status(404).json({ success: false, message: 'Project not found' });
     }
 
-    const fileType   = fmtFileType(req.file.mimetype, req.body.file_type);
-    const version    = (req.body.version || '1.0').trim().slice(0, 20);
-    const isPrimary  = req.body.is_primary === '1' || req.body.is_primary === 'true';
+    const fileType    = fmtFileType(req.file.mimetype, req.body.file_type);
+    const version     = (req.body.version || '1.0').trim().slice(0, 20);
+    const isPrimary   = req.body.is_primary === '1' || req.body.is_primary === 'true';
     const relativePath = buildRelativePath(fileType, req.file.filename);
 
-    // If marking as primary, unset any existing primary for this type
     if (isPrimary) {
       await db.query(
-        'UPDATE project_files SET is_primary = 0 WHERE project_id = ? AND file_type = ?',
+        'UPDATE project_files SET is_primary = FALSE WHERE project_id = $1 AND file_type = $2',
         [projectId, fileType]
       );
     }
@@ -78,7 +56,8 @@ async function uploadSingle(req, res, next) {
       `INSERT INTO project_files
          (project_id, file_name, stored_name, file_path, mime_type,
           file_size_bytes, file_type, version, is_primary, uploaded_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+       RETURNING id`,
       [
         projectId,
         req.file.originalname,
@@ -88,21 +67,20 @@ async function uploadSingle(req, res, next) {
         req.file.size,
         fileType,
         version,
-        isPrimary ? 1 : 0,
+        isPrimary,
         req.user.id,
       ]
     );
 
-    // Keep legacy project_file_path / preview_image_path in sync
     if (fileType === 'source' && isPrimary) {
       await db.query(
-        'UPDATE projects SET project_file_path = ?, updated_at = NOW() WHERE id = ?',
+        'UPDATE projects SET project_file_path = $1, updated_at = NOW() WHERE id = $2',
         [relativePath, projectId]
       );
     }
     if (fileType === 'preview' && isPrimary) {
       await db.query(
-        'UPDATE projects SET preview_image_path = ?, updated_at = NOW() WHERE id = ?',
+        'UPDATE projects SET preview_image_path = $1, updated_at = NOW() WHERE id = $2',
         [relativePath, projectId]
       );
     }
@@ -111,7 +89,7 @@ async function uploadSingle(req, res, next) {
       success: true,
       message: 'File uploaded successfully',
       data: {
-        id:              result.insertId,
+        id:              result[0].id,
         project_id:      projectId,
         file_name:       req.file.originalname,
         stored_name:     req.file.filename,
@@ -124,21 +102,13 @@ async function uploadSingle(req, res, next) {
       },
     });
   } catch (err) {
-    // Clean up the uploaded file on error
     if (req.file) safeUnlink(req.file.path);
     next(err);
   }
 }
 
-/**
- * POST /api/admin/uploads/:projectId/bulk
- *
- * Upload multiple files at once.
- * Body (multipart/form-data):
- *   files[]     — up to 10 files
- *   file_type   — applied to all files in this batch
- *   version     — optional version string
- */
+// ── POST /api/admin/uploads/:projectId/bulk ───────────────────────────────────
+
 async function uploadBulk(req, res, next) {
   const uploadedFiles = req.files || [];
   try {
@@ -150,7 +120,7 @@ async function uploadBulk(req, res, next) {
     const projectId = parseInt(req.params.projectId, 10);
 
     const [projects] = await db.query(
-      'SELECT id FROM projects WHERE id = ? AND is_deleted = 0',
+      'SELECT id FROM projects WHERE id = $1 AND is_deleted = FALSE',
       [projectId]
     );
     if (!projects.length) {
@@ -169,7 +139,8 @@ async function uploadBulk(req, res, next) {
         `INSERT INTO project_files
            (project_id, file_name, stored_name, file_path, mime_type,
             file_size_bytes, file_type, version, is_primary, uploaded_by)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,FALSE,$9)
+         RETURNING id`,
         [
           projectId,
           file.originalname,
@@ -184,7 +155,7 @@ async function uploadBulk(req, res, next) {
       );
 
       inserted.push({
-        id:              result.insertId,
+        id:              result[0].id,
         file_name:       file.originalname,
         file_type:       fileType,
         file_size_bytes: file.size,
@@ -203,18 +174,15 @@ async function uploadBulk(req, res, next) {
   }
 }
 
-/**
- * GET /api/admin/uploads/:projectId
- *
- * List all files attached to a project, grouped by file_type.
- */
+// ── GET /api/admin/uploads/:projectId ────────────────────────────────────────
+
 async function listProjectFiles(req, res, next) {
   try {
     const db        = getPool();
     const projectId = parseInt(req.params.projectId, 10);
 
     const [project] = await db.query(
-      'SELECT id, title, vendor FROM projects WHERE id = ? AND is_deleted = 0',
+      'SELECT id, title, vendor FROM projects WHERE id = $1 AND is_deleted = FALSE',
       [projectId]
     );
     if (!project.length) {
@@ -229,12 +197,11 @@ async function listProjectFiles(req, res, next) {
          u.name AS uploaded_by_name
        FROM project_files pf
        LEFT JOIN users u ON pf.uploaded_by = u.id
-       WHERE pf.project_id = ?
+       WHERE pf.project_id = $1
        ORDER BY pf.file_type ASC, pf.is_primary DESC, pf.created_at DESC`,
       [projectId]
     );
 
-    // Group by file_type
     const grouped = files.reduce((acc, f) => {
       if (!acc[f.file_type]) acc[f.file_type] = [];
       acc[f.file_type].push(f);
@@ -243,64 +210,56 @@ async function listProjectFiles(req, res, next) {
 
     res.json({
       success: true,
-      data: {
-        project: project[0],
-        files,
-        grouped,
-        total: files.length,
-      },
+      data: { project: project[0], files, grouped, total: files.length },
     });
   } catch (err) {
     next(err);
   }
 }
 
-/**
- * PATCH /api/admin/uploads/files/:fileId
- *
- * Update metadata for an uploaded file (version, is_primary, file_type).
- */
+// ── PATCH /api/admin/uploads/files/:fileId ────────────────────────────────────
+
 async function updateFileMeta(req, res, next) {
   try {
     const db     = getPool();
     const fileId = parseInt(req.params.fileId, 10);
 
     const [rows] = await db.query(
-      'SELECT id, project_id, file_type FROM project_files WHERE id = ?',
+      'SELECT id, project_id, file_type FROM project_files WHERE id = $1',
       [fileId]
     );
-    if (!rows.length) {
-      return res.status(404).json({ success: false, message: 'File not found' });
-    }
+    if (!rows.length) return res.status(404).json({ success: false, message: 'File not found' });
 
     const { version, is_primary, file_type } = req.body;
     const fields = {};
 
-    if (version   !== undefined) fields.version    = String(version).slice(0, 20);
+    if (version !== undefined) fields.version = String(version).slice(0, 20);
     if (file_type !== undefined && ['source','preview','diagram','documentation','other'].includes(file_type)) {
       fields.file_type = file_type;
     }
 
     if (is_primary === '1' || is_primary === true || is_primary === 'true') {
-      // Unset other primaries for this type in the same project
       const targetType = fields.file_type || rows[0].file_type;
       await db.query(
-        'UPDATE project_files SET is_primary = 0 WHERE project_id = ? AND file_type = ?',
+        'UPDATE project_files SET is_primary = FALSE WHERE project_id = $1 AND file_type = $2',
         [rows[0].project_id, targetType]
       );
-      fields.is_primary = 1;
+      fields.is_primary = true;
     } else if (is_primary === '0' || is_primary === false || is_primary === 'false') {
-      fields.is_primary = 0;
+      fields.is_primary = false;
     }
 
     if (!Object.keys(fields).length) {
       return res.status(400).json({ success: false, message: 'No fields to update' });
     }
 
-    const setClauses = Object.keys(fields).map((k) => `${k} = ?`).join(', ');
+    const keys   = Object.keys(fields);
+    const values = Object.values(fields);
+    const setClauses = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
+
     await db.query(
-      `UPDATE project_files SET ${setClauses} WHERE id = ?`,
-      [...Object.values(fields), fileId]
+      `UPDATE project_files SET ${setClauses} WHERE id = $${keys.length + 1}`,
+      [...values, fileId]
     );
 
     res.json({ success: true, message: 'File metadata updated' });
@@ -309,43 +268,34 @@ async function updateFileMeta(req, res, next) {
   }
 }
 
-/**
- * DELETE /api/admin/uploads/files/:fileId
- *
- * Delete a single file record and remove it from disk.
- */
+// ── DELETE /api/admin/uploads/files/:fileId ───────────────────────────────────
+
 async function deleteProjectFile(req, res, next) {
   try {
     const db     = getPool();
     const fileId = parseInt(req.params.fileId, 10);
 
     const [rows] = await db.query(
-      'SELECT id, project_id, file_path, file_type, is_primary FROM project_files WHERE id = ?',
+      'SELECT id, project_id, file_path, file_type, is_primary FROM project_files WHERE id = $1',
       [fileId]
     );
-    if (!rows.length) {
-      return res.status(404).json({ success: false, message: 'File not found' });
-    }
+    if (!rows.length) return res.status(404).json({ success: false, message: 'File not found' });
 
     const { project_id, file_path, file_type, is_primary } = rows[0];
 
-    // Remove from disk
     safeUnlink(file_path);
+    await db.query('DELETE FROM project_files WHERE id = $1', [fileId]);
 
-    // Remove DB record
-    await db.query('DELETE FROM project_files WHERE id = ?', [fileId]);
-
-    // If this was the primary file, clear the legacy column
     if (is_primary) {
       if (file_type === 'source') {
         await db.query(
-          'UPDATE projects SET project_file_path = NULL, updated_at = NOW() WHERE id = ?',
+          'UPDATE projects SET project_file_path = NULL, updated_at = NOW() WHERE id = $1',
           [project_id]
         );
       }
       if (file_type === 'preview') {
         await db.query(
-          'UPDATE projects SET preview_image_path = NULL, updated_at = NOW() WHERE id = ?',
+          'UPDATE projects SET preview_image_path = NULL, updated_at = NOW() WHERE id = $1',
           [project_id]
         );
       }
@@ -357,11 +307,8 @@ async function deleteProjectFile(req, res, next) {
   }
 }
 
-/**
- * GET /api/admin/uploads/stats
- *
- * Storage statistics across all project files.
- */
+// ── GET /api/admin/uploads/stats ─────────────────────────────────────────────
+
 async function getStorageStats(req, res, next) {
   try {
     const db = getPool();
@@ -369,22 +316,23 @@ async function getStorageStats(req, res, next) {
     const [byType] = await db.query(
       `SELECT
          file_type,
-         COUNT(*)                        AS file_count,
-         COALESCE(SUM(file_size_bytes), 0) AS total_bytes,
-         COALESCE(SUM(download_count), 0)  AS total_downloads
+         COUNT(*)                           AS file_count,
+         COALESCE(SUM(file_size_bytes), 0)  AS total_bytes,
+         COALESCE(SUM(download_count),  0)  AS total_downloads
        FROM project_files
        GROUP BY file_type
        ORDER BY total_bytes DESC`
     );
 
-    const [[totals]] = await db.query(
+    const [totalsRows] = await db.query(
       `SELECT
-         COUNT(*)                        AS total_files,
-         COALESCE(SUM(file_size_bytes), 0) AS total_bytes,
-         COALESCE(SUM(download_count), 0)  AS total_downloads,
-         COUNT(DISTINCT project_id)      AS projects_with_files
+         COUNT(*)                           AS total_files,
+         COALESCE(SUM(file_size_bytes), 0)  AS total_bytes,
+         COALESCE(SUM(download_count),  0)  AS total_downloads,
+         COUNT(DISTINCT project_id)         AS projects_with_files
        FROM project_files`
     );
+    const totals = totalsRows[0];
 
     const [recent] = await db.query(
       `SELECT
@@ -405,10 +353,6 @@ async function getStorageStats(req, res, next) {
 }
 
 module.exports = {
-  uploadSingle,
-  uploadBulk,
-  listProjectFiles,
-  updateFileMeta,
-  deleteProjectFile,
-  getStorageStats,
+  uploadSingle, uploadBulk, listProjectFiles,
+  updateFileMeta, deleteProjectFile, getStorageStats,
 };
