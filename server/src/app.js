@@ -9,9 +9,11 @@ const path = require('path');
 
 const { connectDB } = require('./config/db');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
+const passport = require('./config/passport');
 
 // ── Route imports ──────────────────────────────────────────────────────────────
 const authRoutes      = require('./routes/auth.routes');
+const oauthRoutes     = require('./routes/oauth.routes');
 const projectsRoutes  = require('./routes/projects.routes');
 const coursesRoutes   = require('./routes/courses.routes');
 const booksRoutes     = require('./routes/books.routes');
@@ -54,6 +56,9 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
+
+// ── Passport (OAuth — stateless, no sessions needed) ──────────────────────────
+app.use(passport.initialize());
 
 // ── Stripe webhook — raw body BEFORE express.json() ───────────────────────────
 app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
@@ -124,6 +129,7 @@ app.use('/uploads/books/covers',
 
 // ── API routes ─────────────────────────────────────────────────────────────────
 app.use('/api/auth',      authRoutes);
+app.use('/api/auth',      oauthRoutes);
 app.use('/api/projects',  projectsRoutes);
 app.use('/api/courses',   coursesRoutes);
 app.use('/api/books',     booksRoutes);
