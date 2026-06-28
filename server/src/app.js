@@ -31,9 +31,24 @@ app.use(
 );
 
 // ── CORS ───────────────────────────────────────────────────────────────────────
+const allowedOrigins = [
+  (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, ''),
+  'http://localhost:5173',
+  'http://localhost:3000',
+];
+
 app.use(
   cors({
-    origin:         process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, curl, Postman)
+      if (!origin) return callback(null, true);
+      // Strip trailing slash from incoming origin before comparing
+      const clean = origin.replace(/\/$/, '');
+      if (allowedOrigins.includes(clean)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS blocked: ${origin}`));
+    },
     credentials:    true,
     methods:        ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
