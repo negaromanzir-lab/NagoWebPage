@@ -83,6 +83,16 @@ app.use('/uploads/projects/previews',
 app.use('/uploads/projects/diagrams',
   express.static(path.join(UPLOAD_BASE, 'projects', 'diagrams')));
 
+// ── Root ───────────────────────────────────────────────────────────────────────
+app.get('/', (_req, res) => {
+  res.json({
+    success: true,
+    message: 'NagoWeb API is running',
+    version: '1.0.0',
+    docs:    '/health',
+  });
+});
+
 // ── Health check ───────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
   res.json({
