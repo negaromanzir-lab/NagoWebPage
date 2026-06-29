@@ -1,13 +1,3 @@
-/**
- * OAuthCallbackPage.jsx
- *
- * This page is the landing page after Google/GitHub OAuth redirect.
- * URL looks like: /oauth/callback?access_token=...&refresh_token=...&name=...
- *
- * It reads the tokens from the URL, stores them, clears the URL,
- * then redirects the user to their dashboard.
- */
-
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { storage } from '../lib/api';
@@ -16,23 +6,23 @@ import { useAuth } from '../context/AuthContext';
 export default function OAuthCallbackPage() {
   const [searchParams] = useSearchParams();
   const navigate        = useNavigate();
-  const { updateUser }  = useAuth();
+  const { login }       = useAuth();
   const [error, setError] = useState('');
 
   useEffect(() => {
     const accessToken  = searchParams.get('access_token');
     const refreshToken = searchParams.get('refresh_token');
-    const error        = searchParams.get('error');
+    const errorParam   = searchParams.get('error');
 
     // Handle error from backend
-    if (error) {
+    if (errorParam) {
       const messages = {
         account_disabled: 'Your account has been disabled. Please contact support.',
         oauth_failed:     'Authentication failed. Please try again.',
         google_failed:    'Google sign-in failed. Please try again.',
         github_failed:    'GitHub sign-in failed. Please try again.',
       };
-      setError(messages[error] || 'Authentication failed. Please try again.');
+      setError(messages[errorParam] || 'Authentication failed. Please try again.');
       setTimeout(() => navigate('/login'), 3000);
       return;
     }
@@ -51,17 +41,20 @@ export default function OAuthCallbackPage() {
       role:  searchParams.get('role')  || 'buyer',
     };
 
-    // Store tokens and user — same as normal login
+    // Store tokens and user in localStorage directly
     storage.setTokens(accessToken, refreshToken);
     storage.setUser(user);
-    updateUser(user);
 
-    // Clear sensitive data from URL then redirect
+    // Clear sensitive tokens from URL immediately
     window.history.replaceState({}, document.title, '/oauth/callback');
 
     // Redirect based on role
     const destination = user.role === 'admin' ? '/admin' : '/dashboard';
-    navigate(destination, { replace: true });
+
+    // Small delay so storage is written before navigation
+    setTimeout(() => {
+      window.location.href = destination;
+    }, 300);
   }, []);
 
   return (
@@ -80,7 +73,6 @@ export default function OAuthCallbackPage() {
           </>
         ) : (
           <>
-            {/* Spinner */}
             <div className="w-14 h-14 bg-cyan-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="w-7 h-7 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin block" />
             </div>
