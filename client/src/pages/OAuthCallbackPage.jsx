@@ -53,8 +53,8 @@ export default function OAuthCallbackPage() {
 
     // Small delay so storage is written before navigation
     setTimeout(() => {
-      window.location.href = destination;
-    }, 300);
+      window.location.replace(destination);
+    }, 500);
   }, []);
 
   return (
