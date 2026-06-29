@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { projectsApi, downloadApi, userApi } from '../lib/api';
@@ -234,17 +236,32 @@ export default function ProjectDetailsPage() {
               )}
             </div>
 
-            {/* Description */}
+            {/* Description — rendered as rich markdown */}
             {project.description && (
               <div className="mb-8">
                 <h2 className="text-xl font-semibold mb-4">Description</h2>
-                <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">{project.description}</p>
-              </div>
-            )}
-
-            {project.short_description && !project.description && (
-              <div className="mb-8">
-                <p className="text-gray-300 leading-relaxed">{project.short_description}</p>
+                <div className="prose prose-invert prose-sm max-w-none
+                  prose-headings:text-white prose-headings:font-bold
+                  prose-h2:text-lg prose-h2:mt-6 prose-h2:mb-3
+                  prose-h3:text-base prose-h3:mt-5 prose-h3:mb-2
+                  prose-p:text-gray-300 prose-p:leading-relaxed
+                  prose-strong:text-white
+                  prose-code:text-cyan-300 prose-code:bg-gray-800 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:before:content-none prose-code:after:content-none
+                  prose-pre:bg-gray-900 prose-pre:border prose-pre:border-gray-700 prose-pre:rounded-xl prose-pre:p-4
+                  prose-ul:text-gray-300 prose-li:text-gray-300 prose-li:marker:text-cyan-400
+                  prose-ol:text-gray-300
+                  prose-a:text-cyan-400 prose-a:no-underline hover:prose-a:underline
+                  prose-hr:border-gray-800
+                  prose-table:text-sm
+                  prose-thead:bg-gray-800/50
+                  prose-th:text-gray-300 prose-th:font-semibold prose-th:px-4 prose-th:py-2
+                  prose-td:text-gray-400 prose-td:px-4 prose-td:py-2
+                  prose-tr:border-gray-700/50
+                  prose-blockquote:border-cyan-500 prose-blockquote:text-gray-400">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {project.description}
+                  </ReactMarkdown>
+                </div>
               </div>
             )}
 
