@@ -37,8 +37,8 @@ async function handleOAuthCallback(req, res) {
   try {
     const user = req.user;
 
-    if (!user || !user.is_active) {
-      return res.redirect(`${clientUrl}/login?error=account_disabled`);
+    if (!user) {
+      return res.redirect(`${clientUrl}/login?error=oauth_failed`);
     }
 
     const db           = getPool();

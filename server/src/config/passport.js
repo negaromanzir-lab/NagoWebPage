@@ -38,14 +38,15 @@ async function findOrCreateOAuthUser({ provider, providerId, email, name, avatar
       [email]
     );
     if (byEmail.length) {
-      // Link the OAuth provider to the existing account
+      // Link the OAuth provider to the existing account and ensure active
       await db.query(
         `UPDATE users SET ${idColumn} = $1, auth_provider = $2,
-         avatar_url = COALESCE(avatar_url, $3), last_login_at = NOW()
+         avatar_url = COALESCE(avatar_url, $3),
+         is_active = TRUE, last_login_at = NOW()
          WHERE id = $4`,
         [providerId, provider, avatarUrl, byEmail[0].id]
       );
-      return byEmail[0];
+      return { ...byEmail[0], is_active: true };
     }
   }
 
@@ -53,9 +54,9 @@ async function findOrCreateOAuthUser({ provider, providerId, email, name, avatar
   const [result] = await db.query(
     `INSERT INTO users
        (name, email, password_hash, role, ${idColumn}, auth_provider,
-        avatar_url, is_email_verified, email_verified_at)
-     VALUES ($1, $2, NULL, 'buyer', $3, $4, $5, TRUE, NOW())
-     RETURNING id, name, email, role`,
+        avatar_url, is_active, is_email_verified, email_verified_at)
+     VALUES ($1, $2, NULL, 'buyer', $3, $4, $5, TRUE, TRUE, NOW())
+     RETURNING id, name, email, role, is_active`,
     [
       name  || `User_${providerId.slice(0, 8)}`,
       email || null,
