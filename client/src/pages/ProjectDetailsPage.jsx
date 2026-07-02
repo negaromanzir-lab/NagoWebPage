@@ -6,6 +6,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { projectsApi, downloadApi, userApi } from '../lib/api';
 import { ApiError } from '../lib/api';
+import { PROJECT_CONTENT_MAP } from './projects/index';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -158,6 +159,40 @@ export default function ProjectDetailsPage() {
           <span className="text-gray-400">{project.title}</span>
         </div>
 
+        {/* When project has custom content page — use full width layout */}
+        {PROJECT_CONTENT_MAP[project.slug] ? (
+          <div className="max-w-4xl">
+            {/* Title */}
+            <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">{project.title}</h1>
+            <div className="flex flex-wrap items-center gap-3 mb-6">
+              {project.category && (
+                <span className="text-sm text-cyan-400 bg-cyan-500/10 px-3 py-1.5 rounded-full border border-cyan-500/20">
+                  {project.category}
+                </span>
+              )}
+              {project.vendor && (
+                <span className="text-sm text-gray-400 bg-gray-800 px-3 py-1.5 rounded-full">{project.vendor}</span>
+              )}
+              <span className={`text-xs font-semibold px-3 py-1.5 rounded-full capitalize border ${DIFFICULTY_COLORS[project.difficulty] || ''}`}>
+                {project.difficulty}
+              </span>
+              <span className="text-sm text-gray-500">{project.download_count || 0} downloads</span>
+            </div>
+            {/* Custom rich content component */}
+            {(() => {
+              const CustomContent = PROJECT_CONTENT_MAP[project.slug];
+              return (
+                <CustomContent
+                  onDownload={handlePurchase}
+                  isPurchased={project.hasPurchased}
+                  price={project.price}
+                  isLoading={purchaseLoading}
+                />
+              );
+            })()}
+          </div>
+        ) : (
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main content */}
           <div className="lg:col-span-2">
@@ -236,34 +271,31 @@ export default function ProjectDetailsPage() {
               )}
             </div>
 
-            {/* Description — rendered as rich markdown */}
-            {project.description && (
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold mb-4">Description</h2>
-                <div className="prose prose-invert prose-sm max-w-none
-                  prose-headings:text-white prose-headings:font-bold
-                  prose-h2:text-lg prose-h2:mt-6 prose-h2:mb-3
-                  prose-h3:text-base prose-h3:mt-5 prose-h3:mb-2
-                  prose-p:text-gray-300 prose-p:leading-relaxed
-                  prose-strong:text-white
-                  prose-code:text-cyan-300 prose-code:bg-gray-800 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:before:content-none prose-code:after:content-none
-                  prose-pre:bg-gray-900 prose-pre:border prose-pre:border-gray-700 prose-pre:rounded-xl prose-pre:p-4
-                  prose-ul:text-gray-300 prose-li:text-gray-300 prose-li:marker:text-cyan-400
-                  prose-ol:text-gray-300
-                  prose-a:text-cyan-400 prose-a:no-underline hover:prose-a:underline
-                  prose-hr:border-gray-800
-                  prose-table:text-sm
-                  prose-thead:bg-gray-800/50
-                  prose-th:text-gray-300 prose-th:font-semibold prose-th:px-4 prose-th:py-2
-                  prose-td:text-gray-400 prose-td:px-4 prose-td:py-2
-                  prose-tr:border-gray-700/50
-                  prose-blockquote:border-cyan-500 prose-blockquote:text-gray-400">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {project.description}
-                  </ReactMarkdown>
-                </div>
-              </div>
-            )}
+            {/* Description — markdown fallback for projects without custom pages */}
+            {(() => {
+              if (project.description) {
+                return (
+                  <div className="mb-8">
+                    <h2 className="text-xl font-semibold mb-4">Description</h2>
+                    <div className="prose prose-invert prose-sm max-w-none
+                      prose-headings:text-white prose-headings:font-bold
+                      prose-p:text-gray-300 prose-p:leading-relaxed
+                      prose-strong:text-white
+                      prose-code:text-cyan-300 prose-code:bg-gray-800 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:before:content-none prose-code:after:content-none
+                      prose-pre:bg-gray-900 prose-pre:border prose-pre:border-gray-700 prose-pre:rounded-xl
+                      prose-ul:text-gray-300 prose-li:text-gray-300 prose-li:marker:text-cyan-400
+                      prose-table:text-sm prose-thead:bg-gray-800/50
+                      prose-th:text-gray-300 prose-td:text-gray-400
+                      prose-hr:border-gray-800">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {project.description}
+                      </ReactMarkdown>
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            })()}
 
             {/* Tags */}
             {project.tags && project.tags.length > 0 && (
@@ -308,7 +340,8 @@ export default function ProjectDetailsPage() {
             </div>
           </div>
 
-          {/* Sidebar */}
+          {/* Sidebar — hide for projects with custom content pages */}
+          {!PROJECT_CONTENT_MAP[project.slug] && (
           <div className="lg:col-span-1">
             <div className="sticky top-20 bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6">
               {/* Price */}
@@ -396,7 +429,9 @@ export default function ProjectDetailsPage() {
               </div>
             </div>
           </div>
+          )}
         </div>
+        )} {/* end ternary: custom content vs grid layout */}
       </main>
 
       <Footer />
