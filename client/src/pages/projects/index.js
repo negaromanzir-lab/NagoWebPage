@@ -26,4 +26,7 @@ export const PROJECT_CONTENT_MAP = {
 
   // Project #2 — SOHO / XYZ Company
   'simple-networking-project-2-soho-xyz': htmlProject('networking-project-2.html'),
+
+  // Project #3 — Vic Modern Hotel
+  'hotel-network-vic-modern-project-3': htmlProject('networking-project-3.html'),
 };
