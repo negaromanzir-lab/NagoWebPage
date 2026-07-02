@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Networking Project #1 — Accounts & Delivery</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0f1a;--surface:#111827;--surface2:#1a2234;
+  --border:#1e2d45;--border2:#243050;
+  --accent:#00e5c0;--accent-dim:rgba(0,229,192,.12);--accent-border:rgba(0,229,192,.3);
+  --accounts:#3b82f6;--accounts-dim:rgba(59,130,246,.12);--accounts-border:rgba(59,130,246,.35);
+  --delivery:#f59e0b;--delivery-dim:rgba(245,158,11,.12);--delivery-border:rgba(245,158,11,.35);
+  --success:#22c55e;
+  --warn-bg:rgba(245,158,11,.1);--warn-border:rgba(245,158,11,.35);
+  --text:#e2e8f0;--text-muted:#64748b;--text-soft:#94a3b8;
+  --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;--r:10px;
+}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.75;font-size:15px;min-width:320px}
+.hero{background:linear-gradient(160deg,#0b0f1a 0%,#0f1829 40%,#0b1420 100%);border-bottom:1px solid var(--border);padding:64px 24px 52px;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 60% 50% at 80% 30%,rgba(0,229,192,.07),transparent),radial-gradient(ellipse 40% 60% at 10% 80%,rgba(59,130,246,.06),transparent)}
+.hero-inner{max-width:980px;margin:0 auto;position:relative;z-index:1}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);border-radius:99px;padding:5px 16px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:22px}
+.hero-tag span{width:7px;height:7px;background:var(--accent);border-radius:50%;animation:blink 1.6s ease-in-out infinite;display:inline-block}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.hero h1{font-size:clamp(26px,4.5vw,48px);font-weight:800;line-height:1.18;letter-spacing:-.02em;margin-bottom:18px;background:linear-gradient(135deg,#f1f5f9 30%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-desc{color:var(--text-soft);font-size:16px;max-width:640px;line-height:1.75;margin-bottom:36px}
+.hero-desc strong{color:var(--text)}
+.hero-pills{display:flex;flex-wrap:wrap;gap:12px}
+.pill{display:flex;align-items:center;gap:9px;padding:9px 20px;border-radius:99px;font-size:13px;font-weight:600;border:1px solid}
+.pill-a{background:var(--accounts-dim);border-color:var(--accounts-border);color:var(--accounts)}
+.pill-d{background:var(--delivery-dim);border-color:var(--delivery-border);color:var(--delivery)}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.dot-a{background:var(--accounts)}.dot-d{background:var(--delivery)}
+.page{max-width:980px;margin:0 auto;padding:0 24px 100px}
+.section{margin-top:64px}
+.sec-label{display:inline-flex;align-items:center;gap:10px;margin-bottom:24px}
+.phase-chip{font-family:var(--mono);font-size:11px;font-weight:700;background:linear-gradient(135deg,#1e3a5f,#1a2d50);color:var(--accent);border:1px solid var(--accent-border);padding:4px 12px;border-radius:5px;letter-spacing:.08em;text-transform:uppercase}
+.sec-title{font-size:22px;font-weight:700;letter-spacing:-.01em}
+.sec-divider{height:1px;background:linear-gradient(90deg,var(--border2),transparent);margin-bottom:28px}
+.body-text{color:var(--text-soft);font-size:15px;line-height:1.8;margin-bottom:20px}
+.body-text strong{color:var(--text)}
+.sub-heading{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin:32px 0 14px;display:flex;align-items:center;gap:10px}
+.sub-heading::after{content:'';flex:1;height:1px;background:var(--border)}
+/* Req list */
+.req-list{list-style:none;display:grid;gap:12px}
+.req-item{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:16px 20px;display:flex;align-items:flex-start;gap:14px}
+.req-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.req-text{color:var(--text-soft);font-size:14.5px;line-height:1.7}
+.req-text strong{color:var(--text)}
+/* Tech */
+.tech-grid{display:flex;flex-wrap:wrap;gap:10px}
+.tech-item{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border2);color:var(--text-soft);border-radius:8px;padding:9px 16px;font-size:13.5px}
+.tech-item::before{content:'→';color:var(--accent);font-size:12px;font-weight:700}
+/* Topo notice */
+.topo-notice{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:18px 22px;display:flex;align-items:flex-start;gap:14px;margin-bottom:24px}
+.topo-notice-icon{font-size:20px;flex-shrink:0}
+.topo-notice-text{color:var(--text-soft);font-size:14px;line-height:1.75}
+.topo-notice-text strong{color:var(--text)}
+/* Overview */
+.overview-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:6px}
+.dept-card{background:var(--surface);border-radius:var(--r);padding:24px 26px;border:1px solid var(--border2)}
+.dept-card.acc{border-top:3px solid var(--accounts)}.dept-card.del{border-top:3px solid var(--delivery)}
+.dept-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:18px}
+.dept-card.acc .dept-label{color:var(--accounts)}.dept-card.del .dept-label{color:var(--delivery)}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
+.info-row:last-child{border-bottom:none;padding-bottom:0}
+.info-key{color:var(--text-muted);font-size:13px}
+.info-val{font-family:var(--mono);font-size:12.5px;color:var(--text);font-weight:600}
+/* Subnet */
+.subnet-pair{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:4px}
+.subnet-box{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:20px 22px}
+.subnet-box.acc{border-left:3px solid var(--accounts)}.subnet-box.del{border-left:3px solid var(--delivery)}
+.subnet-name{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px}
+.subnet-box.acc .subnet-name{color:var(--accounts)}.subnet-box.del .subnet-name{color:var(--delivery)}
+.subnet-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
+.subnet-row:last-child{border-bottom:none}
+.subnet-key{color:var(--text-muted)}.subnet-val{font-family:var(--mono);color:var(--text);font-weight:600;font-size:12.5px}
+/* Device cards */
+.device-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:8px}
+.device-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:18px 20px;display:flex;align-items:flex-start;gap:14px}
+.device-emoji{font-size:22px;flex-shrink:0;margin-top:2px}
+.device-info{font-size:14px}
+.device-info strong{display:block;color:var(--text);margin-bottom:3px}
+.device-info span{color:var(--text-muted);font-size:13px}
+/* Topology wrap */
+.topo-wrap{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:36px 20px;overflow-x:auto}
+.topo-wrap svg{display:block;margin:0 auto;max-width:100%;height:auto}
+/* Table */
+.table-wrap{border:1px solid var(--border2);border-radius:var(--r);overflow:hidden;margin-bottom:6px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+thead{background:var(--surface2)}
+thead th{padding:12px 18px;text-align:left;font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-muted)}
+tbody tr{border-top:1px solid var(--border)}
+tbody tr:hover{background:var(--surface2)}
+tbody td{padding:13px 18px;color:var(--text-soft);vertical-align:middle}
+.mono{font-family:var(--mono);font-size:13px;color:var(--text)!important;font-weight:600}
+.cable-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:var(--success);border-radius:99px;padding:3px 12px;font-size:12.5px;font-weight:600}
+/* Steps */
+.step-list{display:flex;flex-direction:column;gap:20px}
+.step-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:22px 26px}
+.step-header{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.step-num{font-family:var(--mono);font-size:13px;font-weight:700;background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);border-radius:6px;padding:4px 12px;white-space:nowrap}
+.step-title{font-size:15.5px;font-weight:700;color:var(--text)}
+.step-desc{color:var(--text-soft);font-size:14px;line-height:1.75;margin-bottom:14px}
+.step-sub{color:var(--text-soft);font-size:13.5px;line-height:1.7;margin-bottom:10px}
+/* Code */
+.code-block{background:#080c14;border:1px solid var(--border2);border-radius:var(--r);overflow:hidden;margin-top:12px;margin-bottom:4px}
+.code-head{background:var(--surface2);padding:10px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.code-file{font-family:var(--mono);font-size:11.5px;color:var(--text-muted)}
+.copy-btn{background:transparent;border:1px solid var(--border2);color:var(--text-muted);padding:4px 12px;border-radius:5px;font-size:11px;cursor:pointer;font-family:var(--sans);transition:all .2s}
+.copy-btn:hover{border-color:var(--accent);color:var(--accent)}
+pre{padding:22px 24px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.85;color:#c9d1d9;tab-size:4}
+.kw{color:#ff7b72}.ip{color:#79c0ff}.mask{color:#a5d6ff}.cmd{color:var(--accent)}.comment{color:#484f58;font-style:italic}.out{color:#3fb950}.label-txt{color:#d2a8ff}
+/* Config */
+.config-instruction{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:14px 18px;margin:12px 0;display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--text-soft)}
+.config-instruction::before{content:'🖱️';font-size:16px;flex-shrink:0}
+.config-instruction strong{color:var(--text)}
+/* Alert */
+.alert{border-radius:var(--r);padding:14px 18px;display:flex;align-items:flex-start;gap:12px;font-size:14px;line-height:1.7;margin:14px 0}
+.alert-warn{background:var(--warn-bg);border:1px solid var(--warn-border);color:#fbbf24}
+.alert-warn strong{color:#fcd34d}
+.alert-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+/* Test */
+.test-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.test-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:22px 22px 18px}
+.test-badge{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px}
+.test-desc{color:var(--text-soft);font-size:13.5px;margin-bottom:10px}
+.test-step{color:var(--text-muted);font-size:13px;margin-bottom:8px}
+.test-cmd{font-family:var(--mono);font-size:13px;background:#080c14;border:1px solid var(--border2);border-radius:6px;padding:10px 14px;margin:10px 0;color:var(--accent);letter-spacing:.02em}
+.test-result{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--success);font-weight:600;margin-top:10px;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);border-radius:6px;padding:8px 12px}
+/* IP tree */
+.ip-tree-wrap{background:#080c14;border:1px solid var(--border2);border-radius:var(--r);padding:28px 30px;font-family:var(--mono);font-size:13px;line-height:2.1;white-space:pre}
+/* Checklist */
+.checklist{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.check-item{background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:13px 18px;display:flex;align-items:center;gap:12px;font-size:14px;color:var(--text-soft)}
+.check-ok{color:var(--success);font-size:16px;flex-shrink:0}
+/* Mistakes */
+.mistakes{display:flex;flex-direction:column;gap:12px}
+.mistake-row{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);display:grid;grid-template-columns:1fr 1fr;overflow:hidden}
+.mistake-bad,.mistake-good{padding:16px 20px;display:flex;align-items:flex-start;gap:10px;font-size:14px}
+.mistake-bad{border-right:1px solid var(--border)}
+.mistake-bad .ico{color:#f87171;flex-shrink:0;font-size:15px;margin-top:1px}
+.mistake-good .ico{color:var(--success);flex-shrink:0;font-size:15px;margin-top:1px}
+.mistake-bad p{color:var(--text-muted)}.mistake-bad p strong{color:#fca5a5;display:block;margin-bottom:3px;font-size:13px}
+.mistake-good p{color:var(--text-muted)}.mistake-good p strong{color:#86efac;display:block;margin-bottom:3px;font-size:13px}
+.ic{font-family:var(--mono);font-size:12px;background:var(--surface2);color:var(--accent);padding:1px 6px;border-radius:4px;border:1px solid var(--border2)}
+/* Formula */
+.formula-box{background:#080c14;border:1px solid var(--border2);border-radius:var(--r);padding:22px 26px;margin:12px 0}
+.fl{font-family:var(--mono);font-size:13.5px;line-height:2;color:var(--text-soft)}
+.fl .ac{color:var(--accent);font-weight:700}.fl .re{color:var(--text);font-weight:700}
+/* Binary */
+.binary-grid{display:grid;gap:6px;margin:12px 0}
+.binary-row{display:grid;grid-template-columns:80px 1fr auto;gap:12px;align-items:center;font-family:var(--mono);font-size:13px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px 16px}
+.binary-row.hl{border-color:var(--accent-border);background:var(--accent-dim)}
+.boct{color:var(--text-muted)}.bbits{color:#a5d6ff;letter-spacing:.1em}.bbits .bw{color:var(--accent);font-weight:700}.bdec{color:var(--text);font-weight:700}
+.bnote{font-size:11px;color:var(--text-muted);font-style:italic;grid-column:1/-1;padding-top:2px}
+/* Embedded info card */
+.info-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:18px 24px;margin-bottom:16px}
+.info-card div{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text-soft);padding:6px 0;border-bottom:1px solid var(--border)}
+.info-card div:last-child{border-bottom:none}
+.info-card div strong{color:var(--text)}
+@media(max-width:640px){
+  .overview-grid,.subnet-pair,.mistake-row{grid-template-columns:1fr}
+  .mistake-bad{border-right:none;border-bottom:1px solid var(--border)}
+  .hero{padding:44px 16px 36px}.page{padding:0 14px 80px}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag"><span></span>Cisco Packet Tracer · Project #1</div>
+    <h1>Design and Implementation of a Simple Networking Project #1</h1>
+    <p class="hero-desc">A complete step-by-step guide connecting the <strong>Accounts</strong> and <strong>Delivery</strong> departments using subnetting, a Cisco 2911 router, access layer switches, and verified static IP addressing — fully tested and working.</p>
+    <div class="hero-pills">
+      <div class="pill pill-a"><span class="dot dot-a"></span>Accounts — 192.168.40.0/25</div>
+      <div class="pill pill-d"><span class="dot dot-d"></span>Delivery — 192.168.40.128/25</div>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+
+<!-- CASE STUDY -->
+<section class="section">
+  <div class="sec-label"><span class="phase-chip">Case Study</span><span class="sec-title">Project #1 Requirements</span></div>
+  <div class="sec-divider"></div>
+  <p class="body-text">Design a network in <strong>Cisco Packet Tracer</strong> that connects the <strong>ACCOUNTS</strong> and <strong>DELIVERY</strong> departments through the following requirements:</p>
+  <ul class="req-list">
+    <li class="req-item"><span class="req-icon">🖥️</span><p class="req-text">Each department should contain <strong>at least two PCs</strong>.</p></li>
+    <li class="req-item"><span class="req-icon">🔀</span><p class="req-text"><strong>Appropriate number of switches and routers</strong> should be used in the network.</p></li>
+    <li class="req-item"><span class="req-icon">🌐</span><p class="req-text">Using the given network <strong>192.168.40.0</strong>, all interfaces should be configured with correct <strong>IP addresses, subnet masks and gateways</strong>.</p></li>
+    <li class="req-item"><span class="req-icon">🔌</span><p class="req-text">All devices in the network should be <strong>connected using appropriate cables</strong>.</p></li>
+    <li class="req-item"><span class="req-icon">✅</span><p class="req-text"><strong>Test communication</strong> between devices in both the ACCOUNTS and DELIVERY departments.</p></li>
+  </ul>
+</section>
+
+<!-- TECHNOLOGIES -->
+<section class="section">
+  <div class="sec-label"><span class="phase-chip">Overview</span><span class="sec-title">Technologies Implemented</span></div>
+  <div class="sec-divider"></div>
+  <div class="tech-grid">
+    <div class="tech-item">Creating a Simple Network using a Router and Access Layer Switch</div>
+    <div class="tech-item">Connecting Networking Devices with Correct Cabling</div>
+    <div class="tech-item">Connecting Two Networks using a Router</div>
+    <div class="tech-item">Subnetting and IP Addressing</div>
+    <div class="tech-item">Assigning IP Addresses to Router's Interfaces</div>
+    <div class="tech-item">Static IP Address Allocation to Host Devices</div>
+    <div class="tech-item">Test and Verifying Network Communication</div>
+  </div>
+</section>
+
+<!-- TOPOLOGY -->
+<section class="section">
+  <div class="sec-label"><span class="phase-chip">Topology</span><span class="sec-title">Network Topology Created</span></div>
+  <div class="sec-divider"></div>
+  <div class="topo-notice">
+    <span class="topo-notice-icon">ℹ️</span>
+    <p class="topo-notice-text">The network topology below satisfies all user requirements. Everything is <strong>verified, tested and working fine</strong>. All configuration phases follow below.</p>
+  </div>
+  <div class="topo-wrap">
+    <svg viewBox="0 0 820 390" width="820" height="390" xmlns="http://www.w3.org/2000/svg" font-family="JetBrains Mono,monospace">
+      <defs>
+        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e2d45" stroke-width="0.5"/></pattern>
+        <filter id="glow"><feGaussianBlur stdDeviation="3" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <rect width="820" height="390" fill="#080c14" rx="10"/>
+      <rect width="820" height="390" fill="url(#grid)" rx="10" opacity="0.4"/>
+
+      <!-- ROUTER -->
+      <rect x="330" y="48" width="160" height="62" rx="10" fill="#0f1f35" stroke="#00e5c0" stroke-width="2" filter="url(#glow)"/>
+      <text x="410" y="72" fill="#00e5c0" font-size="11" font-weight="700" text-anchor="middle" font-family="Inter,sans-serif">ROUTER</text>
+      <text x="410" y="88" fill="#64748b" font-size="9.5" text-anchor="middle" font-family="Inter,sans-serif">Cisco 2911</text>
+
+      <!-- Interface dots on router -->
+      <circle cx="365" cy="110" r="5" fill="#00e5c0" opacity=".8"/>
+      <circle cx="455" cy="110" r="5" fill="#00e5c0" opacity=".8"/>
+      <text x="365" y="128" fill="#3b82f6" font-size="9" text-anchor="middle">Gig 0/0</text>
+      <text x="365" y="140" fill="#2563eb" font-size="8.5" text-anchor="middle">192.168.40.1</text>
+      <text x="455" y="128" fill="#f59e0b" font-size="9" text-anchor="middle">Gig 0/1</text>
+      <text x="455" y="140" fill="#b45309" font-size="8.5" text-anchor="middle">192.168.40.129</text>
+
+      <!-- Lines: Router to Switches -->
+      <line x1="365" y1="115" x2="215" y2="198" stroke="#3b82f6" stroke-width="2" stroke-dasharray="6,4" opacity=".7"/>
+      <line x1="455" y1="115" x2="605" y2="198" stroke="#f59e0b" stroke-width="2" stroke-dasharray="6,4" opacity=".7"/>
+      <text x="275" y="163" fill="#334155" font-size="8" text-anchor="middle" transform="rotate(-27,275,163)" font-family="Inter,sans-serif">Straight-through</text>
+      <text x="545" y="163" fill="#334155" font-size="8" text-anchor="middle" transform="rotate(27,545,163)" font-family="Inter,sans-serif">Straight-through</text>
+
+      <!-- ACCOUNTS SWITCH -->
+      <rect x="128" y="198" width="174" height="48" rx="8" fill="#0f1e35" stroke="#3b82f6" stroke-width="1.6"/>
+      <text x="215" y="217" fill="#3b82f6" font-size="10" font-weight="700" text-anchor="middle" font-family="Inter,sans-serif">ACCOUNTS SWITCH</text>
+      <text x="215" y="233" fill="#1d4ed8" font-size="9" text-anchor="middle" font-family="Inter,sans-serif">Access Layer</text>
+
+      <!-- DELIVERY SWITCH -->
+      <rect x="518" y="198" width="174" height="48" rx="8" fill="#1a1000" stroke="#f59e0b" stroke-width="1.6"/>
+      <text x="605" y="217" fill="#f59e0b" font-size="10" font-weight="700" text-anchor="middle" font-family="Inter,sans-serif">DELIVERY SWITCH</text>
+      <text x="605" y="233" fill="#b45309" font-size="9" text-anchor="middle" font-family="Inter,sans-serif">Access Layer</text>
+
+      <!-- Lines: Accounts Switch to devices -->
+      <line x1="168" y1="246" x2="88" y2="306" stroke="#3b82f6" stroke-width="1.5" opacity=".5"/>
+      <line x1="215" y1="246" x2="215" y2="306" stroke="#3b82f6" stroke-width="1.5" opacity=".5"/>
+      <line x1="262" y1="246" x2="342" y2="306" stroke="#3b82f6" stroke-width="1.5" opacity=".5"/>
+
+      <!-- Lines: Delivery Switch to devices -->
+      <line x1="558" y1="246" x2="478" y2="306" stroke="#f59e0b" stroke-width="1.5" opacity=".5"/>
+      <line x1="605" y1="246" x2="605" y2="306" stroke="#f59e0b" stroke-width="1.5" opacity=".5"/>
+      <line x1="652" y1="246" x2="732" y2="306" stroke="#f59e0b" stroke-width="1.5" opacity=".5"/>
+
+      <!-- Subnet labels -->
+      <rect x="46" y="272" width="316" height="20" rx="4" fill="rgba(59,130,246,.08)" stroke="rgba(59,130,246,.2)" stroke-width="1"/>
+      <text x="204" y="286" fill="#3b82f6" font-size="9.5" font-weight="700" text-anchor="middle" font-family="Inter,sans-serif">ACCOUNTS SUBNET — 192.168.40.0/25</text>
+      <rect x="458" y="272" width="316" height="20" rx="4" fill="rgba(245,158,11,.08)" stroke="rgba(245,158,11,.2)" stroke-width="1"/>
+      <text x="616" y="286" fill="#f59e0b" font-size="9.5" font-weight="700" text-anchor="middle" font-family="Inter,sans-serif">DELIVERY SUBNET — 192.168.40.128/25</text>
+
+      <!-- ACCOUNTS DEVICES -->
+      <rect x="46" y="306" width="84" height="64" rx="7" fill="#0f1e35" stroke="#3b82f6" stroke-width="1.4"/>
+      <text x="88" y="328" font-size="14" text-anchor="middle">🖥️</text>
+      <text x="88" y="345" fill="#3b82f6" font-size="10" font-weight="700" text-anchor="middle" font-family="Inter,sans-serif">PC1</text>
+      <text x="88" y="360" fill="#1d4ed8" font-size="8" text-anchor="middle" font-family="Inter,sans-serif">.40.2</text>
+
+      <rect x="173" y="306" width="84" height="64" rx="7" fill="#0f1e35" stroke="#3b82f6" stroke-width="1.4"/>
+      <text x="215" y="328" font-size="14" text-anchor="middle">🖥️</text>
+      <text x="215" y="345" fill="#3b82f6" font-size="10" font-weight="700" text-anchor="middle" font-family="Inter,sans-serif">PC2</text>
+      <text x="215" y="360" fill="#1d4ed8" font-size="8" text-anchor="middle" font-family="Inter,sans-serif">.40.3</text>
+
+      <rect x="300" y="306" width="84" height="64" rx="7" fill="#0f1e35" stroke="#3b82f6" stroke-width="1.4"/>
+      <text x="342" y="328" font-size="14" text-anchor="middle">🖨️</text>
+      <text x="342" y="345" fill="#3b82f6" font-size="10" font-weight="700" text-anchor="middle" font-family="Inter,sans-serif">Printer</text>
+      <text x="342" y="360" fill="#1d4ed8" font-size="8" text-anchor="middle" font-family="Inter,sans-serif">.40.4</text>
+
+      <!-- DELIVERY DEVICES -->
+      <rect x="436" y="306" width="84" height="64" rx="7" fill="#1a1000" stroke="#f59e0b" stroke-width="1.4"/>
+      <text x="478" y="328" font-size="14" text-anchor="middle">🖥️</text>
+      <text x="478" y="345" fill="#f59e0b" font-size="10" font-weight="700" text-anchor="middle" font-family="Inter,sans-serif">PC3</text>
+      <text x="478" y="360" fill="#b45309" font-size="8" text-anchor="middle" font-family="Inter,sans-serif">.40.130</text>
+
+      <rect x="563" y="306" width="84" height="64" rx="7" fill="#1a1000" stroke="#f59e0b" stroke-width="1.4"/>
+      <text x="605" y="328" font-size="14" text-anchor="middle">🖥️</text>
+      <text x="605" y="345" fill="#f59e0b" font-size="10" font-weight="700" text-anchor="middle" font-family="Inter,sans-serif">PC4</text>
+      <text x="605" y="360" fill="#b45309" font-size="8" text-anchor="middle" font-family="Inter,sans-serif">.40.131</text>
+
+      <rect x="690" y="306" width="84" height="64" rx="7" fill="#1a1000" stroke="#f59e0b" stroke-width="1.4"/>
+      <text x="732" y="328" font-size="14" text-anchor="middle">🖨️</text>
+      <text x="732" y="345" fill="#f59e0b" font-size="10" font-weight="700" text-anchor="middle" font-family="Inter,sans-serif">Printer</text>
+      <text x="732" y="360" fill="#b45309" font-size="8" text-anchor="middle" font-family="Inter,sans-serif">.40.132</text>
+    </svg>
+  </div>
+</section>
+
+<!-- NETWORK OVERVIEW -->
+<section class="section">
+  <div class="sec-label"><span class="phase-chip">Network Overview</span><span class="sec-title">Accounts &amp; Delivery Department Network</span></div>
+  <div class="sec-divider"></div>
+  <div class="overview-grid">
+    <div class="dept-card acc">
+      <div class="dept-label">Accounts Department</div>
+      <div class="info-row"><span class="info-key">Subnet</span><span class="info-val">192.168.40.0/25</span></div>
+      <div class="info-row"><span class="info-key">Valid Host Range</span><span class="info-val">.1 — .126</span></div>
+      <div class="info-row"><span class="info-key">Default Gateway</span><span class="info-val">192.168.40.1</span></div>
+      <div class="info-row"><span class="info-key">Broadcast ID</span><span class="info-val">192.168.40.127</span></div>
+      <div class="info-row"><span class="info-key">Subnet Mask</span><span class="info-val">255.255.255.128</span></div>
+    </div>
+    <div class="dept-card del">
+      <div class="dept-label">Delivery Department</div>
+      <div class="info-row"><span class="info-key">Subnet</span><span class="info-val">192.168.40.128/25</span></div>
+      <div class="info-row"><span class="info-key">Valid Host Range</span><span class="info-val">.129 — .254</span></div>
+      <div class="info-row"><span class="info-key">Default Gateway</span><span class="info-val">192.168.40.129</span></div>
+      <div class="info-row"><span class="info-key">Broadcast ID</span><span class="info-val">192.168.40.255</span></div>
+      <div class="info-row"><span class="info-key">Subnet Mask</span><span class="info-val">255.255.255.128</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- PHASE 1: SUBNETTING -->
+<section class="section">
+  <div class="sec-label"><span class="phase-chip">Phase 1</span><span class="sec-title">Subnetting Calculation</span></div>
+  <div class="sec-divider"></div>
+
+  <div class="sub-heading">Given Information</div>
+  <div class="info-card">
+    <div><span>📍</span><span><strong>Base Network Address:</strong> &nbsp;192.168.40.0</span></div>
+    <div><span>🏢</span><span><strong>Number of Departments:</strong> &nbsp;2</span></div>
+    <div><span>🔢</span><span><strong>Number of Subnets Needed:</strong> &nbsp;2</span></div>
+  </div>
+
+  <div class="sub-heading">Step 1 — Find Number of Borrowed Bits</div>
+  <div class="step-card">
+    <p class="step-desc">To determine how many bits to borrow from the host portion, use the formula <strong>2ⁿ ≥ number of subnets needed</strong>. We need 2 subnets, so we solve for n.</p>
+    <div class="formula-box">
+      <div class="fl">Formula: <span class="ac">2ⁿ</span> = Number of Subnets</div>
+      <div class="fl">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ac">2ⁿ</span> = <span class="re">2</span></div>
+      <div class="fl">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;n&nbsp;&nbsp;= <span class="re">1</span></div>
+      <div class="fl" style="margin-top:8px;color:var(--accent);font-weight:700">Therefore: 1 bit is borrowed</div>
+    </div>
+  </div>
+
+  <div class="sub-heading">Step 2 — Calculate Subnet Mask (Binary)</div>
+  <div class="step-card">
+    <p class="step-desc">With 1 borrowed bit, the 4th octet's most significant bit becomes a "1", changing it from 0 (which would be /24) to 128, giving us the /25 subnet mask. The block size equals 128.</p>
+    <div class="binary-grid">
+      <div class="binary-row"><span class="boct">Octet 1</span><span class="bbits">11111111</span><span class="bdec">= 255</span></div>
+      <div class="binary-row"><span class="boct">Octet 2</span><span class="bbits">11111111</span><span class="bdec">= 255</span></div>
+      <div class="binary-row"><span class="boct">Octet 3</span><span class="bbits">11111111</span><span class="bdec">= 255</span></div>
+      <div class="binary-row hl"><span class="boct">Octet 4</span><span class="bbits"><span class="bw">1</span>0000000</span><span class="bdec">= 128</span><span class="bnote">← 1 borrowed bit here</span></div>
+    </div>
+    <div class="formula-box">
+      <div class="fl">Subnet Mask = <span class="ac">255.255.255.128</span>  (/25)</div>
+      <div class="fl">Block Size  = <span class="re">128</span></div>
+    </div>
+  </div>
+
+  <div class="sub-heading">Step 3 — Calculate Both Subnets</div>
+  <div class="step-card">
+    <p class="step-desc">With a block size of 128, the first subnet starts at 0 and ends at 127 (128 addresses). The second subnet starts at 128 and ends at 255 (128 addresses).</p>
+    <div class="subnet-pair">
+      <div class="subnet-box acc">
+        <div class="subnet-name">Subnet 1 — Accounts Department</div>
+        <div class="subnet-row"><span class="subnet-key">Network ID</span><span class="subnet-val">192.168.40.0</span></div>
+        <div class="subnet-row"><span class="subnet-key">Valid Range</span><span class="subnet-val">192.168.40.1 — .126</span></div>
+        <div class="subnet-row"><span class="subnet-key">Broadcast ID</span><span class="subnet-val">192.168.40.127</span></div>
+        <div class="subnet-row"><span class="subnet-key">Subnet Mask</span><span class="subnet-val">255.255.255.128</span></div>
+      </div>
+      <div class="subnet-box del">
+        <div class="subnet-name">Subnet 2 — Delivery Department</div>
+        <div class="subnet-row"><span class="subnet-key">Network ID</span><span class="subnet-val">192.168.40.128</span></div>
+        <div class="subnet-row"><span class="subnet-key">Valid Range</span><span class="subnet-val">192.168.40.129 — .254</span></div>
+        <div class="subnet-row"><span class="subnet-key">Broadcast ID</span><span class="subnet-val">192.168.40.255</span></div>
+        <div class="subnet-row"><span class="subnet-key">Subnet Mask</span><span class="subnet-val">255.255.255.128</span></div>
+      </div>
+    </div>
+    <div class="alert alert-warn">
+      <span class="alert-icon">⚠️</span>
+      <span><strong>Block size rule:</strong> 0 → 127 = 128 addresses, then 128 → 255 = 128 addresses</span>
+    </div>
+  </div>
+</section>
+
+<!-- PHASE 2 -->
+<section class="section">
+  <div class="sec-label"><span class="phase-chip">Phase 2</span><span class="sec-title">Network Design &amp; Device Placement</span></div>
+  <div class="sec-divider"></div>
+  <div class="sub-heading">Devices Required</div>
+  <div class="device-cards">
+    <div class="device-card"><span class="device-emoji">🔀</span><div class="device-info"><strong>1 Router</strong><span>Cisco 2911</span></div></div>
+    <div class="device-card"><span class="device-emoji">🔄</span><div class="device-info"><strong>2 Switches</strong><span>One per department</span></div></div>
+    <div class="device-card"><span class="device-emoji">🖥️</span><div class="device-info"><strong>4 PCs Total</strong><span>2 PCs per department</span></div></div>
+    <div class="device-card"><span class="device-emoji">🖨️</span><div class="device-info"><strong>2 Printers Total</strong><span>1 printer per department</span></div></div>
+  </div>
+  <div class="sub-heading">Topology Layout</div>
+  <div class="code-block">
+    <div class="code-head"><span class="code-file">topology — ASCII diagram</span></div>
+    <pre>                       [Router]
+                      /        \
+             [Accounts SW]   [Delivery SW]
+             /    |    \      /    |    \
+           PC1  PC2  Printer  PC3  PC4  Printer</pre>
+  </div>
+</section>
+
+<!-- PHASE 3 -->
+<section class="section">
+  <div class="sec-label"><span class="phase-chip">Phase 3</span><span class="sec-title">Cabling</span></div>
+  <div class="sec-divider"></div>
+  <p class="body-text">All connections use <strong>straight-through cables</strong> (or Automatic in Packet Tracer). Straight-through cables connect different device types — router to switch, switch to PC, switch to printer.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Connection</th><th>Cable Type</th></tr></thead>
+      <tbody>
+        <tr><td>Router → Accounts Switch</td><td><span class="cable-pill">✓ Automatic / Straight-through</span></td></tr>
+        <tr><td>Router → Delivery Switch</td><td><span class="cable-pill">✓ Automatic / Straight-through</span></td></tr>
+        <tr><td>Switch → PCs</td><td><span class="cable-pill">✓ Straight-through</span></td></tr>
+        <tr><td>Switch → Printer</td><td><span class="cable-pill">✓ Straight-through</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- PHASE 4 -->
+<section class="section">
+  <div class="sec-label"><span class="phase-chip">Phase 4</span><span class="sec-title">Configure Router Interfaces</span></div>
+  <div class="sec-divider"></div>
+  <div class="step-list">
+
+    <div class="step-card">
+      <div class="step-header"><span class="step-num">Step 1</span><span class="step-title">Turn Up Both Interfaces</span></div>
+      <p class="step-desc">By default, all router interfaces are administratively shut down. Before assigning IP addresses, enable both GigabitEthernet interfaces simultaneously using the <code>interface range</code> command. The <code>no shutdown</code> command brings the interfaces up, and <code>do wr</code> saves the configuration to NVRAM.</p>
+      <div class="code-block">
+        <div class="code-head"><span class="code-file">Router CLI</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><span class="cmd">enable</span>
+<span class="cmd">config t</span>
+<span class="kw">interface range</span> <span class="ip">gig 0/0 - 1</span>
+<span class="kw">no shutdown</span>
+<span class="cmd">do wr</span></pre>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-header"><span class="step-num">Step 2</span><span class="step-title">Assign IP to Gig 0/0 — Accounts Side</span></div>
+      <p class="step-desc">Configure GigabitEthernet 0/0 with the <strong>Accounts subnet gateway IP (192.168.40.1)</strong>. This interface physically connects to the Accounts switch and becomes the default gateway for all devices in the Accounts subnet. The <code>no shutdown</code> ensures the interface stays active after IP assignment.</p>
+      <div class="code-block">
+        <div class="code-head"><span class="code-file">Router CLI — Accounts Interface (Gig 0/0)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><span class="cmd">enable</span>
+<span class="cmd">config t</span>
+<span class="kw">interface</span> <span class="ip">gig 0/0</span>
+<span class="kw">ip address</span> <span class="ip">192.168.40.1</span> <span class="mask">255.255.255.128</span>
+<span class="kw">no shutdown</span>
+<span class="kw">exit</span>
+<span class="cmd">do wr</span></pre>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-header"><span class="step-num">Step 3</span><span class="step-title">Assign IP to Gig 0/1 — Delivery Side</span></div>
+      <p class="step-desc">Configure GigabitEthernet 0/1 with the <strong>Delivery subnet gateway IP (192.168.40.129)</strong>. This interface connects to the Delivery switch and acts as the default gateway for all Delivery department devices. Note: .129 is the first usable host address in the second subnet block (128–255).</p>
+      <div class="code-block">
+        <div class="code-head"><span class="code-file">Router CLI — Delivery Interface (Gig 0/1)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><span class="cmd">enable</span>
+<span class="cmd">config t</span>
+<span class="kw">interface</span> <span class="ip">gig 0/1</span>
+<span class="kw">ip address</span> <span class="ip">192.168.40.129</span> <span class="mask">255.255.255.128</span>
+<span class="kw">no shutdown</span>
+<span class="kw">exit</span>
+<span class="cmd">do wr</span></pre>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-header"><span class="step-num">Step 4</span><span class="step-title">Verify Router Configuration</span></div>
+      <p class="step-desc">After saving, confirm that both interfaces are configured correctly. Run <code>do show startup-config</code> and look for both GigabitEthernet interfaces showing their assigned IP addresses and subnet masks. If correct, you'll see the following output:</p>
+      <div class="code-block">
+        <div class="code-head"><span class="code-file">Router CLI — Verification</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><span class="cmd">do show startup-config</span></pre>
+      </div>
+      <p class="step-sub" style="margin-top:16px;margin-bottom:10px">Expected output confirming correct configuration:</p>
+      <div class="code-block">
+        <div class="code-head"><span class="code-file">Expected Output</span></div>
+        <pre><span class="label-txt">interface GigabitEthernet0/0</span>
+ <span class="kw">ip address</span> <span class="ip">192.168.40.1</span> <span class="mask">255.255.255.128</span>
+
+<span class="label-txt">interface GigabitEthernet0/1</span>
+ <span class="kw">ip address</span> <span class="ip">192.168.40.129</span> <span class="mask">255.255.255.128</span></pre>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- PHASE 5 -->
+<section class="section">
+  <div class="sec-label"><span class="phase-chip">Phase 5</span><span class="sec-title">Configure Host Devices (Static IP)</span></div>
+  <div class="sec-divider"></div>
+  <p class="body-text">Each PC and printer must be manually assigned a <strong>static IP address</strong> within its department's subnet range. Unlike DHCP, static addressing ensures each device always has the same IP — important for servers, printers, and network equipment.</p>
+  <div class="config-instruction"><strong>How to configure each PC in Packet Tracer:</strong>&nbsp; Click PC → Desktop → IP Configuration → Select Static</div>
+
+  <div class="sub-heading">Accounts Department</div>
+  <div class="table-wrap" style="margin-bottom:16px">
+    <table>
+      <thead><tr><th>Device</th><th>IP Address</th><th>Subnet Mask</th><th>Default Gateway</th></tr></thead>
+      <tbody>
+        <tr><td style="color:var(--accounts);font-weight:700">PC1</td><td class="mono">192.168.40.2</td><td class="mono">255.255.255.128</td><td class="mono">192.168.40.1</td></tr>
+        <tr><td style="color:var(--accounts);font-weight:700">PC2</td><td class="mono">192.168.40.3</td><td class="mono">255.255.255.128</td><td class="mono">192.168.40.1</td></tr>
+        <tr><td style="color:var(--accounts);font-weight:700">Printer</td><td class="mono">192.168.40.4</td><td class="mono">255.255.255.128</td><td class="mono">192.168.40.1</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="code-block">
+    <div class="code-head"><span class="code-file">Example — PC1 IP Configuration (Accounts)</span></div>
+    <pre><span class="comment">Click PC → Desktop → IP Configuration → Static</span>
+
+IP Address   : <span class="ip">192.168.40.2</span>
+Subnet Mask  : <span class="mask">255.255.255.128</span>
+Default GW   : <span class="ip">192.168.40.1</span></pre>
+  </div>
+
+  <div class="sub-heading" style="margin-top:36px">Delivery Department</div>
+  <div class="table-wrap" style="margin-bottom:16px">
+    <table>
+      <thead><tr><th>Device</th><th>IP Address</th><th>Subnet Mask</th><th>Default Gateway</th></tr></thead>
+      <tbody>
+        <tr><td style="color:var(--delivery);font-weight:700">PC3</td><td class="mono">192.168.40.130</td><td class="mono">255.255.255.128</td><td class="mono">192.168.40.129</td></tr>
+        <tr><td style="color:var(--delivery);font-weight:700">PC4</td><td class="mono">192.168.40.131</td><td class="mono">255.255.255.128</td><td class="mono">192.168.40.129</td></tr>
+        <tr><td style="color:var(--delivery);font-weight:700">Printer</td><td class="mono">192.168.40.132</td><td class="mono">255.255.255.128</td><td class="mono">192.168.40.129</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="code-block">
+    <div class="code-head"><span class="code-file">Example — PC3 IP Configuration (Delivery)</span></div>
+    <pre><span class="comment">Click PC → Desktop → IP Configuration → Static</span>
+
+IP Address   : <span class="ip">192.168.40.130</span>
+Subnet Mask  : <span class="mask">255.255.255.128</span>
+Default GW   : <span class="ip">192.168.40.129</span></pre>
+  </div>
+  <div class="alert alert-warn">
+    <span class="alert-icon">⚠️</span>
+    <div><strong>Key Rule:</strong> Never assign the Network ID or Broadcast ID to any device.<br>
+    <span style="font-size:13px">Do not use <span class="ic">.0</span> or <span class="ic">.128</span> (Network IDs) or <span class="ic">.127</span> or <span class="ic">.255</span> (Broadcast IDs) as host addresses.</span></div>
+  </div>
+</section>
+
+<!-- PHASE 6 -->
+<section class="section">
+  <div class="sec-label"><span class="phase-chip">Phase 6</span><span class="sec-title">Test Communication</span></div>
+  <div class="sec-divider"></div>
+  <p class="body-text">After all devices are configured, run the following ping tests from <strong>PC1's Command Prompt</strong> to verify that both same-department and cross-department communication is working correctly through the router.</p>
+  <div class="test-grid">
+    <div class="test-card">
+      <div class="test-badge">Test 1 — Same Department Communication</div>
+      <p class="test-desc">Verify communication between two PCs within the same Accounts subnet. This tests that the switch and IP configuration on both PCs are correct.</p>
+      <p class="test-step">📍 Click <strong>PC1</strong> → Desktop → Command Prompt</p>
+      <div class="test-cmd">ping 192.168.40.3</div>
+      <div class="test-result">✅ Expected: Reply successful</div>
+    </div>
+    <div class="test-card">
+      <div class="test-badge">Test 2 — Cross Department Communication</div>
+      <p class="test-desc">Verify the router correctly routes traffic between the Accounts and Delivery subnets. This confirms the default gateways and router interfaces are properly configured.</p>
+      <p class="test-step">📍 Click <strong>PC1</strong> → Desktop → Command Prompt</p>
+      <div class="test-cmd">ping 192.168.40.130</div>
+      <div class="test-result">✅ Expected: Reply successful</div>
+    </div>
+    <div class="test-card">
+      <div class="test-badge">Test 3 — Ping Printer (Other Department)</div>
+      <p class="test-desc">Verify that an Accounts PC can reach the Delivery department's printer. Confirms end-to-end cross-subnet connectivity for non-PC devices.</p>
+      <p class="test-step">📍 Click <strong>PC1</strong> → Desktop → Command Prompt</p>
+      <div class="test-cmd">ping 192.168.40.132</div>
+      <div class="test-result">✅ Expected: Reply successful</div>
+    </div>
+  </div>
+</section>
+
+<!-- FULL IP SUMMARY -->
+<section class="section">
+  <div class="sec-label"><span class="phase-chip">Summary</span><span class="sec-title">Full IP Address Assignment Summary</span></div>
+  <div class="sec-divider"></div>
+  <div class="ip-tree-wrap"><span style="color:var(--accent);font-weight:700;font-size:14px">ROUTER</span>
+<span style="color:var(--text-muted)">├── </span><span style="color:var(--accounts)">Gig 0/0</span> : <span style="color:var(--text);font-weight:600">192.168.40.1/25</span>   <span style="color:#484f58">(Accounts Gateway)</span>
+<span style="color:var(--text-muted)">└── </span><span style="color:var(--delivery)">Gig 0/1</span> : <span style="color:var(--text);font-weight:600">192.168.40.129/25</span> <span style="color:#484f58">(Delivery Gateway)</span>
+
+<span style="color:var(--accounts);font-weight:700">ACCOUNTS DEPARTMENT  (Subnet 1 — 192.168.40.0/25)</span>
+<span style="color:var(--text-muted)">├── PC1     : </span><span style="color:var(--text);font-weight:600">192.168.40.2/25</span>
+<span style="color:var(--text-muted)">├── PC2     : </span><span style="color:var(--text);font-weight:600">192.168.40.3/25</span>
+<span style="color:var(--text-muted)">└── Printer : </span><span style="color:var(--text);font-weight:600">192.168.40.4/25</span>
+
+<span style="color:var(--delivery);font-weight:700">DELIVERY DEPARTMENT   (Subnet 2 — 192.168.40.128/25)</span>
+<span style="color:var(--text-muted)">├── PC3     : </span><span style="color:var(--text);font-weight:600">192.168.40.130/25</span>
+<span style="color:var(--text-muted)">├── PC4     : </span><span style="color:var(--text);font-weight:600">192.168.40.131/25</span>
+<span style="color:var(--text-muted)">└── Printer : </span><span style="color:var(--text);font-weight:600">192.168.40.132/25</span></div>
+</section>
+
+<!-- CHECKLIST -->
+<section class="section">
+  <div class="sec-label"><span class="phase-chip">Checklist</span><span class="sec-title">Configuration Checklist</span></div>
+  <div class="sec-divider"></div>
+  <div class="checklist">
+    <div class="check-item"><span class="check-ok">✅</span> Subnetting completed</div>
+    <div class="check-item"><span class="check-ok">✅</span> Topology designed</div>
+    <div class="check-item"><span class="check-ok">✅</span> Cabling done</div>
+    <div class="check-item"><span class="check-ok">✅</span> Router interfaces configured</div>
+    <div class="check-item"><span class="check-ok">✅</span> All PCs assigned static IPs</div>
+    <div class="check-item"><span class="check-ok">✅</span> All printers assigned static IPs</div>
+    <div class="check-item"><span class="check-ok">✅</span> Default gateways set correctly</div>
+    <div class="check-item"><span class="check-ok">✅</span> Communication tested</div>
+  </div>
+</section>
+
+<!-- MISTAKES -->
+<section class="section">
+  <div class="sec-label"><span class="phase-chip">Tips</span><span class="sec-title">Common Mistakes to Avoid</span></div>
+  <div class="sec-divider"></div>
+  <div class="mistakes">
+    <div class="mistake-row">
+      <div class="mistake-bad"><span class="ico">✗</span><p><strong>Assigning network ID as IP</strong>Using .0 or .128 as a host IP address</p></div>
+      <div class="mistake-good"><span class="ico">✓</span><p><strong>Correct approach</strong>Start from <span class="ic">.1</span> (Accounts) or <span class="ic">.129</span> (Delivery)</p></div>
+    </div>
+    <div class="mistake-row">
+      <div class="mistake-bad"><span class="ico">✗</span><p><strong>Wrong subnet mask</strong>Using /24 or 255.255.255.0 instead of /25</p></div>
+      <div class="mistake-good"><span class="ico">✓</span><p><strong>Correct approach</strong>Always use <span class="ic">255.255.255.128</span> (/25)</p></div>
+    </div>
+    <div class="mistake-row">
+      <div class="mistake-bad"><span class="ico">✗</span><p><strong>Wrong default gateway</strong>Gateway IP doesn't match the router interface</p></div>
+      <div class="mistake-good"><span class="ico">✓</span><p><strong>Correct approach</strong>Must match the router interface IP exactly (.1 or .129)</p></div>
+    </div>
+    <div class="mistake-row">
+      <div class="mistake-bad"><span class="ico">✗</span><p><strong>Forgetting no shutdown</strong>Router interfaces stay down and pass no traffic</p></div>
+      <div class="mistake-good"><span class="ico">✓</span><p><strong>Correct approach</strong>Always run <span class="ic">no shutdown</span> on every router interface</p></div>
+    </div>
+    <div class="mistake-row">
+      <div class="mistake-bad"><span class="ico">✗</span><p><strong>Assigning broadcast ID as IP</strong>Using .127 or .255 as a device host address</p></div>
+      <div class="mistake-good"><span class="ico">✓</span><p><strong>Correct approach</strong>Never use <span class="ic">.127</span> or <span class="ic">.255</span> — they are broadcast addresses</p></div>
+    </div>
+  </div>
+</section>
+
+</main>
+<script>
+function copyCode(btn){
+  const pre=btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(()=>{
+    const o=btn.textContent;btn.textContent='Copied!';
+    btn.style.color='var(--accent)';btn.style.borderColor='var(--accent)';
+    setTimeout(()=>{btn.textContent=o;btn.style.color='';btn.style.borderColor=''},1800);
+  });
+}
+</script>
+</body>
+</html>
