@@ -1,3 +1,4 @@
+// v2 - force rebuild
 import { Link } from 'react-router-dom';
 
 const categories = [
