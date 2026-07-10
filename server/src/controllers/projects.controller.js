@@ -255,7 +255,7 @@ async function getOne(req, res, next) {
     let hasPurchased = false;
     if (req.user) {
       const [purchase] = await db.query(
-        `SELECT id FROM order_items oi
+        `SELECT oi.id FROM order_items oi
          JOIN orders o ON oi.order_id = o.id
          WHERE o.user_id = $1 AND oi.project_id = $2 AND o.status = 'completed'`,
         [req.user.id, project.id]
