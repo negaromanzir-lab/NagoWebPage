@@ -71,9 +71,9 @@ async function initiateManualOrder(req, res, next) {
       const fee         = parseFloat(p.price) * 0.2;
       await db.query(
         `INSERT INTO order_items
-           (order_id, project_id, price_at_purchase, seller_id, seller_share, platform_fee)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [orderId, p.id, p.price, req.user.id, sellerShare, fee]
+           (order_id, project_id, price_at_purchase, seller_id, seller_share, platform_fee, project_title)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [orderId, p.id, p.price, req.user.id, sellerShare, fee, p.title]
       );
     }
 

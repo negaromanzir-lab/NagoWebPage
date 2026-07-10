@@ -76,8 +76,8 @@ async function createCheckout(req, res, next) {
 
     for (const p of projects) {
       await db.query(
-        'INSERT INTO order_items (order_id, project_id, price_at_purchase, seller_id) VALUES ($1, $2, $3, $4)',
-        [orderId, p.id, p.price, req.user.id]
+        'INSERT INTO order_items (order_id, project_id, price_at_purchase, seller_id, project_title) VALUES ($1, $2, $3, $4, $5)',
+        [orderId, p.id, p.price, req.user.id, p.title]
       );
     }
 
