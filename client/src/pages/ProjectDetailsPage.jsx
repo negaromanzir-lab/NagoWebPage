@@ -277,16 +277,22 @@ export default function ProjectDetailsPage() {
                 return (
                   <div className="mb-8">
                     <h2 className="text-xl font-semibold mb-4">Description</h2>
-                    <div className="prose prose-invert prose-sm max-w-none
-                      prose-headings:text-white prose-headings:font-bold
-                      prose-p:text-gray-300 prose-p:leading-relaxed
-                      prose-strong:text-white
-                      prose-code:text-cyan-300 prose-code:bg-gray-800 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:before:content-none prose-code:after:content-none
-                      prose-pre:bg-gray-900 prose-pre:border prose-pre:border-gray-700 prose-pre:rounded-xl
-                      prose-ul:text-gray-300 prose-li:text-gray-300 prose-li:marker:text-cyan-400
-                      prose-table:text-sm prose-thead:bg-gray-800/50
-                      prose-th:text-gray-300 prose-td:text-gray-400
-                      prose-hr:border-gray-800">
+                    <div className="text-gray-300 text-sm leading-relaxed space-y-4
+                      [&_h2]:text-white [&_h2]:font-bold [&_h2]:text-lg [&_h2]:mt-6 [&_h2]:mb-3
+                      [&_h3]:text-white [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-2
+                      [&_p]:text-gray-300 [&_p]:leading-relaxed
+                      [&_strong]:text-white
+                      [&_code]:text-cyan-300 [&_code]:bg-gray-800 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs
+                      [&_pre]:bg-gray-900 [&_pre]:border [&_pre]:border-gray-700 [&_pre]:rounded-xl [&_pre]:p-4 [&_pre]:overflow-x-auto
+                      [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:text-gray-300
+                      [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:text-gray-300
+                      [&_li]:text-gray-300 [&_li]:mb-1
+                      [&_a]:text-cyan-400 [&_a]:no-underline hover:[&_a]:underline
+                      [&_hr]:border-gray-800
+                      [&_table]:w-full [&_table]:text-sm [&_table]:border-collapse
+                      [&_th]:text-gray-300 [&_th]:font-semibold [&_th]:px-3 [&_th]:py-2 [&_th]:bg-gray-800 [&_th]:text-left
+                      [&_td]:text-gray-400 [&_td]:px-3 [&_td]:py-2 [&_td]:border-t [&_td]:border-gray-700/50
+                      [&_blockquote]:border-l-2 [&_blockquote]:border-cyan-500 [&_blockquote]:pl-4 [&_blockquote]:text-gray-400">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {project.description}
                       </ReactMarkdown>
