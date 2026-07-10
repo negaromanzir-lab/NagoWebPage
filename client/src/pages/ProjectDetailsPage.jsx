@@ -103,8 +103,8 @@ export default function ProjectDetailsPage() {
         setPurchaseLoading(false);
       }
     } else {
-      // For paid projects, redirect to manual payment or checkout
-      navigate('/pay', { state: { projectId: project.id, projectTitle: project.title, price: project.price } });
+      // For paid projects, redirect to manual payment with URL params
+      navigate(`/pay?projects=${project.id}&amount=${project.price}`);
     }
   };
 
