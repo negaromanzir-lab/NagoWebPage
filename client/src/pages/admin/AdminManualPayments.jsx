@@ -41,12 +41,32 @@ function StatusBadge({ status }) {
 // ── Screenshot Viewer ──────────────────────────────────────────────────────────
 
 function ScreenshotViewer({ proofId, fileName }) {
+  const [blobUrl, setBlobUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(false);
-  const url = adminApi.screenshotUrl(proofId);
-  const token = localStorage.getItem('nw_access_token');
 
-  // Use an object tag for PDFs, img for images
+  useEffect(() => {
+    let objectUrl = null;
+    const token = localStorage.getItem('nw_access_token');
+    const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+    fetch(`${BASE_URL}/api/admin/manual-payments/${proofId}/screenshot`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed');
+        return res.blob();
+      })
+      .then((blob) => {
+        objectUrl = URL.createObjectURL(blob);
+        setBlobUrl(objectUrl);
+      })
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+
+    return () => { if (objectUrl) URL.revokeObjectURL(objectUrl); };
+  }, [proofId]);
+
   const isPdf = fileName?.toLowerCase().endsWith('.pdf');
 
   return (
@@ -61,22 +81,20 @@ function ScreenshotViewer({ proofId, fileName }) {
           Failed to load screenshot
         </div>
       )}
-      {isPdf ? (
-        <iframe
-          src={`${url}?token=${token}`}
-          title="Payment proof"
-          className="w-full h-64"
-          onLoad={() => setLoading(false)}
-          onError={() => { setLoading(false); setError(true); }}
-        />
-      ) : (
-        <img
-          src={url}
-          alt="Payment screenshot"
-          className={`w-full object-contain max-h-80 ${loading ? 'hidden' : 'block'}`}
-          onLoad={() => setLoading(false)}
-          onError={() => { setLoading(false); setError(true); }}
-        />
+      {blobUrl && !error && (
+        isPdf ? (
+          <iframe
+            src={blobUrl}
+            title="Payment proof"
+            className="w-full h-64"
+          />
+        ) : (
+          <img
+            src={blobUrl}
+            alt="Payment screenshot"
+            className="w-full object-contain max-h-80"
+          />
+        )
       )}
     </div>
   );
@@ -392,6 +410,22 @@ export default function AdminManualPayments() {
   }, [page, statusFilter, methodFilter]);
 
   useEffect(() => { load(); }, [load]);
+
+  // ── Auto-refresh every 30 s to pick up new proofs without manual reload ──
+  useEffect(() => {
+    const id = setInterval(async () => {
+      try {
+        const res = await adminApi.listManualPayments({ page, limit: 20,
+          ...(statusFilter ? { status: statusFilter } : {}),
+          ...(methodFilter ? { method: methodFilter } : {}),
+        });
+        setProofs(res.data);
+        setPagination(res.pagination);
+        setPendingCount(res.pending_count);
+      } catch { /* silent refresh failure */ }
+    }, 30_000);
+    return () => clearInterval(id);
+  }, [page, statusFilter, methodFilter]);
 
   function handleAction() { load(); }
 

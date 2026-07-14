@@ -225,6 +225,9 @@ export const adminApi = {
   // Analytics
   getAnalytics: () => api.get('/api/admin/analytics'),
 
+  // Notification summary (pending counts for the bell badge)
+  getNotificationsSummary: () => api.get('/api/admin/notifications/summary'),
+
   // Users
   listUsers:        (params = {}) => api.get(`/api/admin/users?${new URLSearchParams(params)}`),
   getUser:          (id)          => api.get(`/api/admin/users/${id}`),

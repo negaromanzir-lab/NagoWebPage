@@ -32,7 +32,7 @@ async function initiateManualOrder(req, res, next) {
 
     const placeholders = project_ids.map((_, i) => `$${i + 1}`).join(',');
     const [projects] = await db.query(
-      `SELECT id, title, price FROM projects
+      `SELECT id, title, price, seller_id FROM projects
        WHERE id IN (${placeholders}) AND is_deleted = FALSE AND is_published = TRUE`,
       project_ids
     );
@@ -69,11 +69,12 @@ async function initiateManualOrder(req, res, next) {
     for (const p of projects) {
       const sellerShare = parseFloat(p.price) * 0.8;
       const fee         = parseFloat(p.price) * 0.2;
+      // Use p.seller_id (the actual project owner), not req.user.id (the buyer)
       await db.query(
         `INSERT INTO order_items
            (order_id, project_id, price_at_purchase, seller_id, seller_share, platform_fee, project_title)
          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [orderId, p.id, p.price, req.user.id, sellerShare, fee, p.title]
+        [orderId, p.id, p.price, p.seller_id, sellerShare, fee, p.title]
       );
     }
 
@@ -196,9 +197,20 @@ async function uploadProof(req, res, next) {
       try {
         const [userRows] = await db.query('SELECT name, email FROM users WHERE id = $1', [req.user.id]);
         if (userRows.length) {
+          // 1. Notify buyer that proof was received
           await emailService.sendPaymentProofReceived({
             user: userRows[0],
             order: { id: orderId, totalAmount: order.total_amount, paymentMethod: order.payment_method },
+          });
+          // 2. Notify admin that a new proof needs review
+          await emailService.sendAdminNewPaymentProof({
+            buyerName:  userRows[0].name,
+            buyerEmail: userRows[0].email,
+            method:     order.payment_method,
+            amountPaid: req.body.amount_paid,
+            currency:   'ETB',
+            orderId,
+            proofId:    result[0].id,
           });
         }
       } catch { /* non-fatal */ }

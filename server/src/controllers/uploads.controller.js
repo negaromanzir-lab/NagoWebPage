@@ -1,17 +1,6 @@
-const path = require('path');
-const fs   = require('fs');
 const { getPool } = require('../config/db');
-const { UPLOAD_DIR, subDirForType, inferFileType } = require('../middleware/upload');
-
-function buildRelativePath(fileType, filename) {
-  return `${subDirForType(fileType)}/${filename}`;
-}
-
-function safeUnlink(relativePath) {
-  if (!relativePath) return;
-  const abs = path.join(UPLOAD_DIR, relativePath);
-  try { if (fs.existsSync(abs)) fs.unlinkSync(abs); } catch { /* ignore */ }
-}
+const { deleteFromCloudinary, getPublicId } = require('../config/cloudinary');
+const { inferFileType } = require('../middleware/upload');
 
 function fmtFileType(mimetype, bodyFileType) {
   if (bodyFileType && ['source','preview','diagram','documentation','other'].includes(bodyFileType)) {
@@ -36,14 +25,16 @@ async function uploadSingle(req, res, next) {
       [projectId]
     );
     if (!projects.length) {
-      safeUnlink(req.file.path.replace(UPLOAD_DIR + path.sep, '').replace(/\\/g, '/'));
       return res.status(404).json({ success: false, message: 'Project not found' });
     }
 
-    const fileType    = fmtFileType(req.file.mimetype, req.body.file_type);
-    const version     = (req.body.version || '1.0').trim().slice(0, 20);
-    const isPrimary   = req.body.is_primary === '1' || req.body.is_primary === 'true';
-    const relativePath = buildRelativePath(fileType, req.file.filename);
+    const fileType  = fmtFileType(req.file.mimetype, req.body.file_type);
+    const version   = (req.body.version || '1.0').trim().slice(0, 20);
+    const isPrimary = req.body.is_primary === '1' || req.body.is_primary === 'true';
+
+    // Cloudinary gives us the URL in req.file.path
+    const cloudinaryUrl  = req.file.path;
+    const storedName     = req.file.filename;
 
     if (isPrimary) {
       await db.query(
@@ -61,8 +52,8 @@ async function uploadSingle(req, res, next) {
       [
         projectId,
         req.file.originalname,
-        req.file.filename,
-        relativePath,
+        storedName,
+        cloudinaryUrl,        // store full Cloudinary URL
         req.file.mimetype,
         req.file.size,
         fileType,
@@ -72,28 +63,29 @@ async function uploadSingle(req, res, next) {
       ]
     );
 
+    // Update project legacy columns with Cloudinary URL
     if (fileType === 'source' && isPrimary) {
       await db.query(
         'UPDATE projects SET project_file_path = $1, updated_at = NOW() WHERE id = $2',
-        [relativePath, projectId]
+        [cloudinaryUrl, projectId]
       );
     }
     if (fileType === 'preview' && isPrimary) {
       await db.query(
         'UPDATE projects SET preview_image_path = $1, updated_at = NOW() WHERE id = $2',
-        [relativePath, projectId]
+        [cloudinaryUrl, projectId]
       );
     }
 
     res.status(201).json({
       success: true,
-      message: 'File uploaded successfully',
+      message: 'File uploaded to Cloudinary successfully',
       data: {
         id:              result[0].id,
         project_id:      projectId,
         file_name:       req.file.originalname,
-        stored_name:     req.file.filename,
-        file_path:       relativePath,
+        stored_name:     storedName,
+        file_path:       cloudinaryUrl,
         mime_type:       req.file.mimetype,
         file_size_bytes: req.file.size,
         file_type:       fileType,
@@ -102,7 +94,6 @@ async function uploadSingle(req, res, next) {
       },
     });
   } catch (err) {
-    if (req.file) safeUnlink(req.file.path);
     next(err);
   }
 }
@@ -124,7 +115,6 @@ async function uploadBulk(req, res, next) {
       [projectId]
     );
     if (!projects.length) {
-      uploadedFiles.forEach((f) => safeUnlink(f.path));
       return res.status(404).json({ success: false, message: 'Project not found' });
     }
 
@@ -133,7 +123,7 @@ async function uploadBulk(req, res, next) {
 
     for (const file of uploadedFiles) {
       const fileType     = fmtFileType(file.mimetype, req.body.file_type);
-      const relativePath = buildRelativePath(fileType, file.filename);
+      const cloudinaryUrl = file.path;
 
       const [result] = await db.query(
         `INSERT INTO project_files
@@ -145,7 +135,7 @@ async function uploadBulk(req, res, next) {
           projectId,
           file.originalname,
           file.filename,
-          relativePath,
+          cloudinaryUrl,
           file.mimetype,
           file.size,
           fileType,
@@ -159,7 +149,7 @@ async function uploadBulk(req, res, next) {
         file_name:       file.originalname,
         file_type:       fileType,
         file_size_bytes: file.size,
-        file_path:       relativePath,
+        file_path:       cloudinaryUrl,
       });
     }
 
@@ -169,7 +159,6 @@ async function uploadBulk(req, res, next) {
       data: inserted,
     });
   } catch (err) {
-    uploadedFiles.forEach((f) => safeUnlink(f.path));
     next(err);
   }
 }
@@ -283,21 +272,19 @@ async function deleteProjectFile(req, res, next) {
 
     const { project_id, file_path, file_type, is_primary } = rows[0];
 
-    safeUnlink(file_path);
+    // Delete from Cloudinary
+    const resourceType = ['preview','diagram'].includes(file_type) ? 'image' : 'raw';
+    const publicId = getPublicId(file_path);
+    if (publicId) await deleteFromCloudinary(publicId, resourceType);
+
     await db.query('DELETE FROM project_files WHERE id = $1', [fileId]);
 
     if (is_primary) {
       if (file_type === 'source') {
-        await db.query(
-          'UPDATE projects SET project_file_path = NULL, updated_at = NOW() WHERE id = $1',
-          [project_id]
-        );
+        await db.query('UPDATE projects SET project_file_path = NULL, updated_at = NOW() WHERE id = $1', [project_id]);
       }
       if (file_type === 'preview') {
-        await db.query(
-          'UPDATE projects SET preview_image_path = NULL, updated_at = NOW() WHERE id = $1',
-          [project_id]
-        );
+        await db.query('UPDATE projects SET preview_image_path = NULL, updated_at = NOW() WHERE id = $1', [project_id]);
       }
     }
 
@@ -314,39 +301,30 @@ async function getStorageStats(req, res, next) {
     const db = getPool();
 
     const [byType] = await db.query(
-      `SELECT
-         file_type,
-         COUNT(*)                           AS file_count,
-         COALESCE(SUM(file_size_bytes), 0)  AS total_bytes,
-         COALESCE(SUM(download_count),  0)  AS total_downloads
-       FROM project_files
-       GROUP BY file_type
-       ORDER BY total_bytes DESC`
+      `SELECT file_type, COUNT(*) AS file_count,
+         COALESCE(SUM(file_size_bytes), 0) AS total_bytes,
+         COALESCE(SUM(download_count), 0) AS total_downloads
+       FROM project_files GROUP BY file_type ORDER BY total_bytes DESC`
     );
 
     const [totalsRows] = await db.query(
-      `SELECT
-         COUNT(*)                           AS total_files,
-         COALESCE(SUM(file_size_bytes), 0)  AS total_bytes,
-         COALESCE(SUM(download_count),  0)  AS total_downloads,
-         COUNT(DISTINCT project_id)         AS projects_with_files
+      `SELECT COUNT(*) AS total_files,
+         COALESCE(SUM(file_size_bytes), 0) AS total_bytes,
+         COALESCE(SUM(download_count), 0) AS total_downloads,
+         COUNT(DISTINCT project_id) AS projects_with_files
        FROM project_files`
     );
-    const totals = totalsRows[0];
 
     const [recent] = await db.query(
-      `SELECT
-         pf.id, pf.file_name, pf.file_type, pf.file_size_bytes, pf.created_at,
-         p.title AS project_title,
-         u.name  AS uploaded_by
+      `SELECT pf.id, pf.file_name, pf.file_type, pf.file_size_bytes, pf.created_at,
+         p.title AS project_title, u.name AS uploaded_by
        FROM project_files pf
        JOIN projects p ON pf.project_id = p.id
-       JOIN users    u ON pf.uploaded_by = u.id
-       ORDER BY pf.created_at DESC
-       LIMIT 10`
+       JOIN users u ON pf.uploaded_by = u.id
+       ORDER BY pf.created_at DESC LIMIT 10`
     );
 
-    res.json({ success: true, data: { byType, totals, recent } });
+    res.json({ success: true, data: { byType, totals: totalsRows[0], recent } });
   } catch (err) {
     next(err);
   }

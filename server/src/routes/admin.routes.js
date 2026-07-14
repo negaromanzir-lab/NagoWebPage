@@ -8,12 +8,28 @@ const tokenService             = require('../services/tokenService');
 const { authenticate, authorize } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
 const {
-  uploadProjectFile,
-  uploadProjectFiles_bulk,
-} = require('../middleware/upload');
+  uploadProjectFileCloud,
+  uploadPaymentProofCloud,
+} = require('../config/cloudinary');
 
 // All admin routes require authentication + admin role
 router.use(authenticate, authorize('admin'));
+
+// ── Notifications summary (used by polling hook in the UI) ─────────────────────
+router.get('/notifications/summary', async (req, res, next) => {
+  try {
+    const db = require('../config/db').getPool();
+    const [rows] = await db.query(`
+      SELECT
+        (SELECT COUNT(*) FROM payment_proofs WHERE status = 'pending')         AS pending_payments,
+        (SELECT COUNT(*) FROM orders          WHERE status = 'pending'
+           AND payment_method IS NULL)                                          AS pending_stripe_orders,
+        (SELECT COUNT(*) FROM projects        WHERE is_published = FALSE
+           AND is_deleted = FALSE)                                              AS unpublished_projects
+    `);
+    res.json({ success: true, data: rows[0] });
+  } catch (err) { next(err); }
+});
 
 // ── Analytics ──────────────────────────────────────────────────────────────────
 router.get('/analytics', adminController.getAnalytics);
@@ -120,20 +136,15 @@ router.post(
   '/uploads/:projectId',
   [param('projectId').isInt({ min: 1 })],
   validate,
-  uploadProjectFile,
+  uploadProjectFileCloud,
   uploadsController.uploadSingle
 );
 
-/**
- * POST /api/admin/uploads/:projectId/bulk
- * Upload up to 10 files at once.
- * Multipart field: `files[]`
- */
 router.post(
   '/uploads/:projectId/bulk',
   [param('projectId').isInt({ min: 1 })],
   validate,
-  uploadProjectFiles_bulk,
+  uploadProjectFileCloud,
   uploadsController.uploadBulk
 );
 

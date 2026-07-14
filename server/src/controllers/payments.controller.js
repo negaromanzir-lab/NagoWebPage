@@ -15,7 +15,7 @@ async function createCheckout(req, res, next) {
 
     const placeholders = project_ids.map((_, i) => `$${i + 1}`).join(',');
     const [projects] = await db.query(
-      `SELECT id, title, price, preview_image_path
+      `SELECT id, title, price, preview_image_path, seller_id
        FROM projects
        WHERE id IN (${placeholders}) AND is_deleted = FALSE AND is_published = TRUE`,
       project_ids
@@ -75,9 +75,10 @@ async function createCheckout(req, res, next) {
     );
 
     for (const p of projects) {
+      // Use p.seller_id (actual project owner), not req.user.id (the buyer)
       await db.query(
         'INSERT INTO order_items (order_id, project_id, price_at_purchase, seller_id, project_title) VALUES ($1, $2, $3, $4, $5)',
-        [orderId, p.id, p.price, req.user.id, p.title]
+        [orderId, p.id, p.price, p.seller_id, p.title]
       );
     }
 

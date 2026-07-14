@@ -1,6 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { adminApi } from '../../lib/api';
+
+// ── Notification counts (polls every 60 s) ────────────────────────────────────
+function useAdminNotifications() {
+  const [summary, setSummary] = useState({ pending_payments: 0, unpublished_projects: 0 });
+
+  useEffect(() => {
+    async function fetchSummary() {
+      try {
+        const res = await adminApi.getNotificationsSummary();
+        setSummary({
+          pending_payments:    Number(res.data.pending_payments)    || 0,
+          unpublished_projects: Number(res.data.unpublished_projects) || 0,
+        });
+      } catch { /* ignore — user may have just logged out */ }
+    }
+    fetchSummary();
+    const id = setInterval(fetchSummary, 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  return summary;
+}
 
 const NAV = [
   {
@@ -100,6 +123,7 @@ export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { pending_payments: pendingPayments, unpublished_projects: unpublishedProjects } = useAdminNotifications();
 
   async function handleLogout() {
     await logout();
@@ -133,12 +157,25 @@ export default function AdminLayout() {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {NAV.map(({ to, end, label, icon }) => (
-          <NavLink key={to} to={to} end={end} className={navLinkClass} onClick={() => setSidebarOpen(false)}>
-            {icon}
-            {label}
-          </NavLink>
-        ))}
+        {NAV.map(({ to, end, label, icon }) => {
+          const badge =
+            label === 'Payments' && pendingPayments > 0   ? pendingPayments :
+            label === 'Projects' && unpublishedProjects > 0 ? unpublishedProjects :
+            null;
+          return (
+            <NavLink key={to} to={to} end={end} className={navLinkClass} onClick={() => setSidebarOpen(false)}>
+              {icon}
+              <span className="flex-1">{label}</span>
+              {badge !== null && (
+                <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${
+                  label === 'Payments' ? 'bg-yellow-500 text-gray-950' : 'bg-cyan-500 text-gray-950'
+                }`}>
+                  {badge}
+                </span>
+              )}
+            </NavLink>
+          );
+        })}
       </nav>
 
       {/* User */}
@@ -207,8 +244,23 @@ export default function AdminLayout() {
             </svg>
           </button>
           <span className="text-gray-400 text-sm hidden sm:block">Admin Panel</span>
-          <div className="ml-auto flex items-center gap-2">
-            <span className="text-xs bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded-full font-semibold">
+          <div className="ml-auto flex items-center gap-3">
+            {/* Notification bell — links to manual payments when pending */}
+            <Link
+              to="/admin/manual-payments"
+              className="relative text-gray-400 hover:text-white transition-colors"
+              title={pendingPayments > 0 ? `${pendingPayments} payment(s) awaiting review` : 'No pending payments'}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              {pendingPayments > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-500 text-gray-950 text-xs font-bold rounded-full flex items-center justify-center">
+                  {pendingPayments > 9 ? '9+' : pendingPayments}
+                </span>
+              )}
+            </Link>            <span className="text-xs bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded-full font-semibold">
               ADMIN
             </span>
           </div>

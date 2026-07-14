@@ -348,7 +348,41 @@ async function sendAccountStatusChanged({ name, email }, isActive) {
   return send({ to: email, subject, html });
 }
 
-// ── 9. New Project Published (seller notification) ────────────────────────────
+// ── 9. Admin: New Payment Proof Alert ────────────────────────────────────────
+
+/**
+ * Notify the admin when a buyer submits a manual payment proof.
+ * @param {{ buyerName: string, buyerEmail: string, method: string, amountPaid: number, currency: string, orderId: string, proofId: number }} info
+ */
+async function sendAdminNewPaymentProof({ buyerName, buyerEmail, method, amountPaid, currency, orderId, proofId }) {
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (!adminEmail) return; // no admin email configured — skip silently
+
+  const methodLabel = { telebirr: 'Telebirr', cbe_birr: 'CBE Birr', bank_transfer: 'Bank Transfer' }[method] || method;
+  const subject = `🔔 New Payment Proof — ${buyerName} (${methodLabel})`;
+
+  const html = layout(subject, `
+    <h2>New payment proof submitted 🔔</h2>
+    <p>A buyer has uploaded a payment screenshot and is waiting for your review.</p>
+    <div class="info-box">
+      <p><span class="label">Buyer</span></p>
+      <p><span class="value">${buyerName}</span> <span style="color:#64748b;">(${buyerEmail})</span></p>
+      <p style="margin-top:8px;"><span class="label">Payment Method</span></p>
+      <p><span class="value">${methodLabel}</span></p>
+      <p style="margin-top:8px;"><span class="label">Amount Paid</span></p>
+      <p><span class="value">${Number(amountPaid).toLocaleString()} ${currency}</span></p>
+      <p style="margin-top:8px;"><span class="label">Order ID</span></p>
+      <p><span class="value" style="font-family:monospace;font-size:12px;">#${orderId.slice(0, 8).toUpperCase()}</span></p>
+      <p style="margin-top:8px;"><span class="label">Status</span></p>
+      <p><span class="badge badge-yellow">Pending Review</span></p>
+    </div>
+    <p>Please review this payment as soon as possible to keep the buyer waiting.</p>
+    <a href="${CLIENT()}/admin/manual-payments" class="btn">Review in Admin Panel</a>
+  `);
+  return send({ to: adminEmail, subject, html });
+}
+
+// ── 10. New Project Published (seller notification) ────────────────────────────
 
 /**
  * Notify a seller when their project is published by an admin.
@@ -380,6 +414,7 @@ module.exports = {
   sendPaymentProofReceived,
   sendPaymentApproved,
   sendPaymentRejected,
+  sendAdminNewPaymentProof,
   sendDownloadLinkReady,
   sendPasswordChanged,
   sendAccountStatusChanged,

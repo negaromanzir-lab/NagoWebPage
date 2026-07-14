@@ -91,15 +91,21 @@ function OrderStatus({ status }) {
 // ── Overview Page ──────────────────────────────────────────────────────────────
 
 export default function AdminOverview() {
-  const [data,    setData]    = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState('');
+  const [data,         setData]         = useState(null);
+  const [loading,      setLoading]      = useState(true);
+  const [error,        setError]        = useState('');
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     adminApi.getAnalytics()
       .then((res) => setData(res.data))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
+
+    // Check pending manual payments via summary endpoint
+    adminApi.getNotificationsSummary()
+      .then((res) => setPendingCount(Number(res.data.pending_payments) || 0))
+      .catch(() => {});
   }, []);
 
   if (loading) return (
@@ -120,6 +126,27 @@ export default function AdminOverview() {
         <h1 className="text-2xl font-bold text-white">Overview</h1>
         <p className="text-gray-500 text-sm mt-1">Platform-wide metrics and activity</p>
       </div>
+
+      {/* Pending payments alert */}
+      {pendingCount > 0 && (
+        <Link
+          to="/admin/manual-payments"
+          className="flex items-center gap-3 bg-yellow-500/10 border border-yellow-500/30 rounded-2xl px-5 py-4 hover:bg-yellow-500/20 transition-colors group"
+        >
+          <span className="text-2xl">🔔</span>
+          <div className="flex-1">
+            <p className="text-yellow-300 font-semibold text-sm">
+              {pendingCount} manual payment{pendingCount !== 1 ? 's' : ''} awaiting review
+            </p>
+            <p className="text-yellow-500/70 text-xs mt-0.5">
+              Click to open the Payments panel and approve or reject submissions
+            </p>
+          </div>
+          <svg className="w-4 h-4 text-yellow-400 group-hover:translate-x-1 transition-transform shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </Link>
+      )}
 
       {/* KPI grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
